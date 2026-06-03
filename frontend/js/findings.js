@@ -276,6 +276,8 @@
   async function loadEngagementsForSelect() {
     const sel = document.getElementById('cf-engagement');
     if (!sel) return;
+    // Clear existing options except the first placeholder
+    while (sel.options.length > 1) sel.remove(1);
     try {
       const engagements = await apiFetch('/api/v1/engagements?page_size=100');
       (engagements || []).forEach(function (eng) {
@@ -285,12 +287,13 @@
         sel.appendChild(opt);
       });
     } catch (_) {
-      // Non-critical — user can still type if select doesn't load
+      // Non-critical
     }
   }
 
-  // Populate engagements when modal opens
-  document.getElementById('modal-create-finding').addEventListener('show.bs.modal', function () {
+  // Populate engagements on page load and also when modal opens
+  loadEngagementsForSelect();
+  $('#modal-create-finding').on('show.bs.modal', function () {
     loadEngagementsForSelect();
   });
 
