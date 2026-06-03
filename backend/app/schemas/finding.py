@@ -58,8 +58,8 @@ class FindingCreate(BaseModel):
     )
     mitre_id: str | None = Field(
         default=None,
-        max_length=16,
-        description="Optional MITRE ATT&CK technique ID (e.g. T1059 or T10059)",
+        max_length=20,
+        description="Optional MITRE ATT&CK technique or sub-technique ID (e.g. T1059 or T1059.001)",
     )
     mitre_name: str | None = Field(
         default=None,

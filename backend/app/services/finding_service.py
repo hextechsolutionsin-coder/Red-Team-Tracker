@@ -22,11 +22,10 @@ from fastapi import HTTPException
 # MITRE ATT&CK technique ID pattern
 # ---------------------------------------------------------------------------
 
-# Matches the letter T followed by exactly 4 or 5 decimal digits.
-# Examples that match : T1059, T10059
-# Examples that do NOT match : T999 (too few), T999999 (too many),
-#                              T1059.001 (sub-technique), t1059 (wrong case)
-MITRE_PATTERN: re.Pattern[str] = re.compile(r"^T\d{4,5}$")
+# Matches T followed by 4-5 digits, optionally followed by .NNN sub-technique.
+# Examples that match : T1059, T10059, T1059.001, T1059.999
+# Examples that do NOT match : T999 (too few), t1059 (wrong case)
+MITRE_PATTERN: re.Pattern[str] = re.compile(r"^T\d{4,5}(\.\d{3})?$")
 
 
 def validate_mitre_id(mitre_id: str) -> None:
@@ -53,8 +52,8 @@ def validate_mitre_id(mitre_id: str) -> None:
                 "error_code": "INVALID_MITRE_ID",
                 "message": (
                     f"Invalid MITRE ATT&CK technique ID '{mitre_id}'. "
-                    "Expected format: T followed by exactly 4 or 5 digits "
-                    "(e.g. T1059 or T10059). Sub-techniques are not supported."
+                    "Expected format: T followed by 4-5 digits, optionally "
+                    "followed by .NNN for sub-techniques (e.g. T1059, T1059.001)."
                 ),
             },
         )
