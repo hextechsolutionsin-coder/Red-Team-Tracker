@@ -9,10 +9,10 @@ FROM nginx:1.27-alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy our custom nginx configuration
-COPY ../nginx/nginx.conf /etc/nginx/conf.d/redboard.conf
+COPY nginx/nginx.conf /etc/nginx/conf.d/redboard.conf
 
 # Copy the static frontend files
-COPY . /usr/share/nginx/html
+COPY frontend/ /usr/share/nginx/html
 
 EXPOSE 80
 
