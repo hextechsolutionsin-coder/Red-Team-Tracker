@@ -24,12 +24,15 @@ RUN groupadd --gid 1001 appgroup && \
 WORKDIR /app
 
 # Install Python dependencies first (cached layer)
-COPY requirements.txt ./
+COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
-COPY . .
+COPY backend/ .
+
+# Copy alembic migrations from project root into the container
+COPY alembic/ ./alembic/
 
 # Ensure the uploads directory exists with correct ownership
 RUN mkdir -p /uploads && chown appuser:appgroup /uploads
