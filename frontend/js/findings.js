@@ -270,6 +270,110 @@
     loadFindings(1);
   });
 
+  // ── MITRE ATT&CK searchable dropdown ─────────────────────────────────────
+
+  // Cached technique list: [{ id: 'T1059', name: 'Command and Scripting Interpreter' }, ...]
+  let _mitreCache = null;
+
+  async function loadMitreTechniques() {
+    if (_mitreCache) return _mitreCache;
+    try {
+      // Use the MITRE ATT&CK STIX/TAXII v2.1 API — enterprise techniques
+      const resp = await fetch(
+        'https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json'
+      );
+      const data = await resp.json();
+      const techniques = [];
+      (data.objects || []).forEach(function (obj) {
+        if (obj.type !== 'attack-pattern' || obj.revoked || obj.x_mitre_deprecated) return;
+        const extRefs = obj.external_references || [];
+        const mitreRef = extRefs.find(function (r) { return r.source_name === 'mitre-attack'; });
+        if (!mitreRef) return;
+        const techId = mitreRef.external_id; // e.g. T1059 or T1059.001
+        // Only include top-level techniques (T + 4-5 digits, no dot) per system validation
+        if (!/^T\d{4,5}$/.test(techId)) return;
+        techniques.push({ id: techId, name: obj.name });
+      });
+      // Sort by ID numerically
+      techniques.sort(function (a, b) { return a.id.localeCompare(b.id, undefined, { numeric: true }); });
+      _mitreCache = techniques;
+      return techniques;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function initMitreSearch() {
+    const searchInput = document.getElementById('cf-mitre-search');
+    const dropdown    = document.getElementById('cf-mitre-dropdown');
+    const hiddenId    = document.getElementById('cf-mitre-id');
+    const nameInput   = document.getElementById('cf-mitre-name');
+
+    if (!searchInput) return;
+
+    // Load techniques in background when page loads
+    loadMitreTechniques();
+
+    searchInput.addEventListener('input', async function () {
+      const query = this.value.trim().toLowerCase();
+      // Clear selection when user types
+      hiddenId.value  = '';
+      nameInput.value = '';
+
+      if (!query || query.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      const techniques = await loadMitreTechniques();
+      const matches = techniques.filter(function (t) {
+        return t.id.toLowerCase().includes(query) || t.name.toLowerCase().includes(query);
+      }).slice(0, 50); // cap at 50 results
+
+      if (matches.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      dropdown.innerHTML = matches.map(function (t) {
+        return '<div class="mitre-option" data-id="' + escapeHtml(t.id) + '" data-name="' + escapeHtml(t.name) + '" ' +
+          'style="padding:6px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f0f0f0;">' +
+          '<strong>' + escapeHtml(t.id) + '</strong> — ' + escapeHtml(t.name) +
+          '</div>';
+      }).join('');
+      dropdown.style.display = 'block';
+
+      // Click handler for each option
+      dropdown.querySelectorAll('.mitre-option').forEach(function (el) {
+        el.addEventListener('mousedown', function (e) {
+          e.preventDefault(); // prevent blur firing before click
+          const id   = el.getAttribute('data-id');
+          const name = el.getAttribute('data-name');
+          searchInput.value = id + ' — ' + name;
+          hiddenId.value    = id;
+          nameInput.value   = name;
+          dropdown.style.display = 'none';
+        });
+        el.addEventListener('mouseover', function () {
+          el.style.backgroundColor = '#f5f5f5';
+        });
+        el.addEventListener('mouseout', function () {
+          el.style.backgroundColor = '';
+        });
+      });
+    });
+
+    // Hide dropdown when focus leaves
+    searchInput.addEventListener('blur', function () {
+      setTimeout(function () { dropdown.style.display = 'none'; }, 150);
+    });
+    searchInput.addEventListener('focus', function () {
+      if (dropdown.children.length > 0) dropdown.style.display = 'block';
+    });
+  }
+
+  initMitreSearch();
+
   // ── Create Finding form ───────────────────────────────────────────────────
 
   // Load engagement list into the select (for lead/admin creating from findings page)
@@ -342,6 +446,9 @@
       // Success — close modal, reset form, reload list
       $('#modal-create-finding').modal('hide');
       document.getElementById('create-finding-form').reset();
+      // Also reset MITRE search field and hidden input
+      const mitreSearch = document.getElementById('cf-mitre-search');
+      if (mitreSearch) mitreSearch.value = '';
       loadFindings(1);
     } catch (err) {
       errorMsg.textContent = err.message || 'Failed to create finding.';
