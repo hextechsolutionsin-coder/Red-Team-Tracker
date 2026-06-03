@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedBoard — Engagements</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-redboard navbar-static-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="dashboard.html">
+          <i class="fa fa-crosshairs"></i> RedBoard
+        </a>
+      </div>
+      <div class="collapse navbar-collapse" id="main-nav">
+        <ul class="nav navbar-nav">
+          <li><a href="dashboard.html"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+          <li class="active"><a href="engagements.html"><i class="fa fa-briefcase"></i> Engagements</a></li>
+          <li><a href="findings.html"><i class="fa fa-bug"></i> Findings</a></li>
+          <li id="nav-logs" class="hidden"><a href="logs.html"><i class="fa fa-list-alt"></i> Logs</a></li>
+          <li id="nav-users" class="hidden"><a href="users.html"><i class="fa fa-users"></i> Users</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#" id="nav-username"><i class="fa fa-user-circle"></i> </a></li>
+          <li><a href="#" id="logout-btn"><i class="fa fa-sign-out"></i> Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container page-wrapper">
+
+    <!-- Page header -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="page-header" style="margin-top:0">
+          <h1>
+            <i class="fa fa-briefcase"></i> Engagements
+            <small>Red team operations</small>
+          </h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error banner -->
+    <div id="page-error" class="alert alert-danger hidden" role="alert">
+      <i class="fa fa-exclamation-circle"></i>
+      <span id="page-error-msg"></span>
+    </div>
+
+    <!-- Toolbar: filter + create button -->
+    <div class="row" style="margin-bottom:16px">
+      <div class="col-sm-4">
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-filter"></i></span>
+          <select id="status-filter" class="form-control">
+            <option value="">All statuses</option>
+            <option value="planned">Planned</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-sm-8 text-right">
+        <!-- Only shown for lead/admin -->
+        <button id="btn-create" class="btn btn-danger hidden" type="button">
+          <i class="fa fa-plus"></i> New Engagement
+        </button>
+      </div>
+    </div>
+
+    <!-- Engagements table -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-body" style="padding:0">
+            <table class="table table-hover table-striped" style="margin-bottom:0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="engagements-tbody">
+                <tr id="row-loading">
+                  <td colspan="5" class="text-center text-muted">
+                    <i class="fa fa-spinner fa-spin"></i> Loading engagements…
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination-wrap" class="text-center hidden">
+          <ul class="pagination" id="pagination"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Engagement Modal (lead/admin only) -->
+    <div class="modal fade" id="create-modal" tabindex="-1" role="dialog" aria-labelledby="create-modal-label">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title" id="create-modal-label">
+              <i class="fa fa-plus"></i> New Engagement
+            </h4>
+          </div>
+          <div class="modal-body">
+            <div id="create-error" class="alert alert-danger hidden" role="alert">
+              <i class="fa fa-exclamation-circle"></i>
+              <span id="create-error-msg"></span>
+            </div>
+            <form id="create-form" novalidate>
+              <div class="form-group">
+                <label for="f-name">Name <span class="text-danger">*</span></label>
+                <input type="text" id="f-name" class="form-control" maxlength="200" required placeholder="Engagement name">
+              </div>
+              <div class="form-group">
+                <label for="f-description">Description</label>
+                <textarea id="f-description" class="form-control" rows="3" maxlength="2000" placeholder="Brief description (optional)"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="f-scope">Scope</label>
+                <textarea id="f-scope" class="form-control" rows="3" maxlength="5000" placeholder="Scope definition (optional)"></textarea>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="f-start-date">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" id="f-start-date" class="form-control" required>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="f-end-date">End Date <span class="text-danger">*</span></label>
+                    <input type="date" id="f-end-date" class="form-control" required>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="button" id="btn-create-submit" class="btn btn-danger">
+              <i class="fa fa-save"></i> Create
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.container -->
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/engagements.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      EngagementsListPage.init();
+    })();
+  </script>
+</body>
+</html>

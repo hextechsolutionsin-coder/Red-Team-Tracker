@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedBoard — Operator Log</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- ── Navigation ────────────────────────────────────────────────────── -->
+  <nav class="navbar navbar-redboard navbar-static-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                data-target="#navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="dashboard.html">
+          <i class="fa fa-crosshairs"></i> RedBoard
+        </a>
+      </div>
+      <div class="collapse navbar-collapse" id="navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="dashboard.html"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+          <li><a href="engagements.html"><i class="fa fa-briefcase"></i> Engagements</a></li>
+          <li><a href="findings.html"><i class="fa fa-bug"></i> Findings</a></li>
+          <li><a href="users.html" id="nav-users"><i class="fa fa-users"></i> Users</a></li>
+          <li class="active"><a href="logs.html"><i class="fa fa-list-alt"></i> Logs</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li>
+            <a href="#" id="nav-username" class="disabled">
+              <i class="fa fa-user-circle"></i> <span id="username-display">…</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" id="logout-btn"><i class="fa fa-sign-out"></i> Logout</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main content ──────────────────────────────────────────────────── -->
+  <div class="container-fluid page-wrapper">
+
+    <div class="row">
+      <div class="col-sm-12">
+        <h2><i class="fa fa-list-alt"></i> Operator Log</h2>
+        <p class="text-muted">Audit trail of all operator actions.</p>
+      </div>
+    </div>
+
+    <!-- ── Filters ──────────────────────────────────────────────────── -->
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <i class="fa fa-filter"></i> Filters
+          </div>
+          <div class="panel-body">
+            <form id="filter-form" class="form-inline">
+
+              <div class="form-group">
+                <label for="filter-engagement" class="sr-only">Engagement ID</label>
+                <input
+                  type="text"
+                  id="filter-engagement"
+                  class="form-control"
+                  placeholder="Engagement ID (UUID)"
+                  style="width:300px;"
+                  autocomplete="off"
+                >
+              </div>
+
+              <div class="form-group" style="margin-left:12px;">
+                <label for="filter-actor" class="sr-only">Actor</label>
+                <input
+                  type="text"
+                  id="filter-actor"
+                  class="form-control"
+                  placeholder="Actor username"
+                  autocomplete="off"
+                >
+              </div>
+
+              <div class="form-group" style="margin-left:12px;">
+                <label for="filter-action-type" class="sr-only">Action type</label>
+                <select id="filter-action-type" class="form-control">
+                  <option value="">— Any action type —</option>
+                  <option value="user_login">user_login</option>
+                  <option value="user_logout">user_logout</option>
+                  <option value="user_created">user_created</option>
+                  <option value="user_deactivated">user_deactivated</option>
+                  <option value="engagement_created">engagement_created</option>
+                  <option value="engagement_status_changed">engagement_status_changed</option>
+                  <option value="engagement_deleted">engagement_deleted</option>
+                  <option value="finding_created">finding_created</option>
+                  <option value="finding_updated">finding_updated</option>
+                  <option value="finding_deleted">finding_deleted</option>
+                  <option value="evidence_uploaded">evidence_uploaded</option>
+                  <option value="evidence_deleted">evidence_deleted</option>
+                  <option value="operator_assigned">operator_assigned</option>
+                  <option value="report_generated">report_generated</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-left:12px;">
+                <button type="submit" id="apply-filters-btn" class="btn btn-primary">
+                  <i class="fa fa-search"></i> Apply Filters
+                </button>
+                <button type="button" id="clear-filters-btn" class="btn btn-default"
+                        style="margin-left:6px;">
+                  <i class="fa fa-times"></i> Clear
+                </button>
+              </div>
+
+              <div class="form-group" style="margin-left:20px;">
+                <button type="button" id="sort-toggle-btn" class="btn btn-default">
+                  <i class="fa fa-sort-desc" id="sort-icon"></i>
+                  <span id="sort-label">Newest first</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div><!-- /.row filters -->
+
+    <!-- ── Error banner ─────────────────────────────────────────────── -->
+    <div class="row hidden" id="error-row">
+      <div class="col-sm-12">
+        <div class="alert alert-danger inline-error" role="alert">
+          <i class="fa fa-exclamation-circle"></i>
+          <span id="error-msg">An error occurred.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Log table ─────────────────────────────────────────────────── -->
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="panel panel-default">
+          <div class="panel-heading clearfix">
+            <span><i class="fa fa-table"></i> Log Entries</span>
+            <span class="pull-right text-muted" id="result-count"></span>
+          </div>
+          <div class="panel-body" id="table-container">
+
+            <!-- Loading spinner -->
+            <div id="loading-row" class="text-center" style="padding:30px;">
+              <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+              <p class="text-muted">Loading…</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-row" class="text-center hidden" style="padding:30px;">
+              <i class="fa fa-inbox fa-3x text-muted"></i>
+              <p class="text-muted">No log entries match the current filters.</p>
+            </div>
+
+            <!-- Table (shown when entries exist) -->
+            <div id="table-wrapper" class="hidden table-responsive">
+              <table class="table table-striped table-hover table-condensed"
+                     aria-label="Operator log entries">
+                <thead>
+                  <tr>
+                    <th>Action Type</th>
+                    <th>Actor</th>
+                    <th>Description</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="log-tbody">
+                </tbody>
+              </table>
+            </div>
+
+          </div><!-- /.panel-body -->
+
+          <!-- Pagination controls -->
+          <div class="panel-footer clearfix" id="pagination-footer">
+            <div class="pull-left" id="page-info" style="line-height:34px;"></div>
+            <div class="pull-right">
+              <nav aria-label="Log pagination">
+                <ul class="pagination pagination-sm" style="margin:0;" id="pagination-ul">
+                </ul>
+              </nav>
+            </div>
+          </div>
+
+        </div><!-- /.panel -->
+      </div>
+    </div><!-- /.row table -->
+
+  </div><!-- /.container-fluid -->
+
+  <!-- ── Scripts ──────────────────────────────────────────────────────── -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/logs.js"></script>
+
+</body>
+</html>

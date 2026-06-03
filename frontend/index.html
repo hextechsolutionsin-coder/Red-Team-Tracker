@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedBoard — Login</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="login-page">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3">
+        <div class="login-box">
+          <div class="login-logo">
+            <i class="fa fa-crosshairs fa-3x"></i>
+            <h2>RedBoard</h2>
+            <p class="text-muted">Red Team Operations Tracker</p>
+          </div>
+
+          <div id="login-error" class="alert alert-danger hidden" role="alert">
+            <i class="fa fa-exclamation-circle"></i>
+            <span id="login-error-msg">Authentication failed.</span>
+          </div>
+
+          <form id="login-form" novalidate>
+            <div class="form-group">
+              <label for="username" class="sr-only">Username</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  class="form-control"
+                  placeholder="Username"
+                  required
+                  autocomplete="username"
+                  autofocus
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="sr-only">Password</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  class="form-control"
+                  placeholder="Password"
+                  required
+                  autocomplete="current-password"
+                >
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="login-btn"
+              class="btn btn-danger btn-block"
+            >
+              <i class="fa fa-sign-in"></i> Sign In
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // If already logged in, redirect to dashboard
+      const user = currentUser();
+      if (user) {
+        window.location.replace('dashboard.html');
+        return;
+      }
+
+      const form     = document.getElementById('login-form');
+      const errorDiv = document.getElementById('login-error');
+      const errorMsg = document.getElementById('login-error-msg');
+      const btn      = document.getElementById('login-btn');
+
+      function showError(msg) {
+        errorMsg.textContent = msg || 'Authentication failed. Please try again.';
+        errorDiv.classList.remove('hidden');
+      }
+
+      function hideError() {
+        errorDiv.classList.add('hidden');
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideError();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+          showError('Username and password are required.');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Signing in…';
+
+        try {
+          await login(username, password);
+          window.location.replace('dashboard.html');
+        } catch (err) {
+          showError(err.message || 'Authentication failed. Please try again.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa fa-sign-in"></i> Sign In';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

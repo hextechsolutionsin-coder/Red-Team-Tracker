@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedBoard — Finding Detail</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="dashboard.html">
+          <i class="fa fa-crosshairs"></i> RedBoard
+        </a>
+      </div>
+      <ul class="nav navbar-nav">
+        <li><a href="dashboard.html"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+        <li><a href="engagements.html"><i class="fa fa-briefcase"></i> Engagements</a></li>
+        <li class="active"><a href="findings.html"><i class="fa fa-bug"></i> Findings</a></li>
+        <li><a href="logs.html"><i class="fa fa-list-alt"></i> Logs</a></li>
+        <li id="nav-users" class="hidden"><a href="users.html"><i class="fa fa-users"></i> Users</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+          <a href="#" id="logout-link">
+            <i class="fa fa-sign-out"></i> Logout
+            (<span id="nav-username"></span>)
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+
+    <!-- Breadcrumb -->
+    <div class="row">
+      <div class="col-sm-12">
+        <ol class="breadcrumb">
+          <li><a href="findings.html">Findings</a></li>
+          <li class="active" id="breadcrumb-title">Loading…</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="row">
+      <div class="col-sm-12">
+        <div id="page-error" class="alert alert-danger hidden" role="alert">
+          <i class="fa fa-exclamation-circle"></i>
+          <span id="page-error-msg"></span>
+        </div>
+        <div id="page-success" class="alert alert-success hidden" role="alert">
+          <i class="fa fa-check-circle"></i>
+          <span id="page-success-msg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finding detail card -->
+    <div class="row">
+      <div class="col-md-8">
+        <div class="box box-danger">
+          <div class="box-header with-border">
+            <h3 class="box-title" id="finding-title">—</h3>
+            <div class="box-tools pull-right">
+              <!-- Report download link for the parent engagement — lead/admin only -->
+              <span id="report-error" class="text-danger small hidden" style="margin-right:8px;"></span>
+              <button
+                id="btn-download-report"
+                class="btn btn-sm btn-default hidden"
+                title="Download PDF Report for Parent Engagement"
+                aria-label="Download PDF Report"
+              >
+                <i class="fa fa-file-pdf-o"></i> Download Report
+              </button>
+            </div>
+          </div>
+          <div class="box-body">
+            <dl class="dl-horizontal">
+              <dt>Severity</dt>
+              <dd><span id="finding-severity" class="label label-default">—</span></dd>
+
+              <dt>Status</dt>
+              <dd id="finding-status">—</dd>
+
+              <dt>Engagement</dt>
+              <dd><a id="finding-engagement-link" href="#">—</a></dd>
+
+              <dt>MITRE ID</dt>
+              <dd id="finding-mitre-id">—</dd>
+
+              <dt>MITRE Name</dt>
+              <dd id="finding-mitre-name">—</dd>
+
+              <dt>Created by</dt>
+              <dd id="finding-created-by">—</dd>
+
+              <dt>Created at</dt>
+              <dd id="finding-created-at">—</dd>
+            </dl>
+
+            <hr>
+
+            <h4>Reproduction Steps</h4>
+            <pre id="finding-reproduction" class="pre-scrollable">—</pre>
+
+            <h4>Remediation Recommendations</h4>
+            <pre id="finding-remediation" class="pre-scrollable">—</pre>
+          </div>
+          <!-- Edit button — operators and leads/admins -->
+          <div class="box-footer">
+            <button id="btn-toggle-edit" class="btn btn-primary">
+              <i class="fa fa-edit"></i> Edit
+            </button>
+            <button id="btn-delete-finding" class="btn btn-danger pull-right hidden">
+              <i class="fa fa-trash"></i> Delete Finding
+            </button>
+          </div>
+        </div>
+
+        <!-- Edit form (hidden until Edit button clicked) -->
+        <div class="box box-warning hidden" id="edit-box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Edit Finding</h3>
+          </div>
+          <div class="box-body">
+            <form id="edit-finding-form">
+              <div class="form-group">
+                <label for="edit-title">Title</label>
+                <input type="text" id="edit-title" class="form-control" maxlength="500" required>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="edit-severity">Severity</label>
+                    <select id="edit-severity" class="form-control">
+                      <option value="Critical">Critical</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                      <option value="Info">Info</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="edit-status">Status</label>
+                    <select id="edit-status" class="form-control">
+                      <option value="open">open</option>
+                      <option value="in-progress">in-progress</option>
+                      <option value="remediated">remediated</option>
+                      <option value="verified">verified</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="edit-mitre-id">MITRE ID (optional)</label>
+                    <input type="text" id="edit-mitre-id" class="form-control" placeholder="e.g. T1059" pattern="^T\d{4,5}$">
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="edit-mitre-name">MITRE Name (optional)</label>
+                    <input type="text" id="edit-mitre-name" class="form-control" maxlength="256">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="edit-reproduction">Reproduction Steps</label>
+                <textarea id="edit-reproduction" class="form-control" rows="6" maxlength="10000"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="edit-remediation">Remediation Recommendations</label>
+                <textarea id="edit-remediation" class="form-control" rows="6" maxlength="10000"></textarea>
+              </div>
+              <div id="edit-error" class="alert alert-danger hidden"></div>
+              <button type="submit" class="btn btn-warning">
+                <i class="fa fa-save"></i> Save Changes
+              </button>
+              <button type="button" id="btn-cancel-edit" class="btn btn-default">Cancel</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence panel -->
+      <div class="col-md-4">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">Evidence Files</h3>
+          </div>
+          <div class="box-body">
+            <ul id="evidence-list" class="list-unstyled">
+              <li class="text-muted">Loading…</li>
+            </ul>
+            <div id="evidence-error" class="alert alert-danger hidden small"></div>
+          </div>
+          <div class="box-footer">
+            <form id="upload-evidence-form">
+              <div class="input-group">
+                <input type="file" id="evidence-file-input" class="form-control" accept=".png,.jpg,.jpeg,.gif,.pdf,.txt">
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-info btn-flat">
+                    <i class="fa fa-upload"></i> Upload
+                  </button>
+                </span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.container-fluid -->
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/evidence.js"></script>
+  <script src="js/reports.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const user = requireAuth();
+
+      // Wire navigation
+      document.getElementById('nav-username').textContent = user.username;
+      if (user.role === 'admin') {
+        document.getElementById('nav-users').classList.remove('hidden');
+      }
+      document.getElementById('logout-link').addEventListener('click', function (e) {
+        e.preventDefault();
+        logout();
+      });
+
+      const params    = new URLSearchParams(window.location.search);
+      const findingId = params.get('id');
+
+      if (!findingId) {
+        showPageError('No finding ID specified.');
+        return;
+      }
+
+      function showPageError(msg) {
+        document.getElementById('page-error-msg').textContent = msg;
+        document.getElementById('page-error').classList.remove('hidden');
+      }
+      function showPageSuccess(msg) {
+        document.getElementById('page-success-msg').textContent = msg;
+        document.getElementById('page-success').classList.remove('hidden');
+        setTimeout(function () {
+          document.getElementById('page-success').classList.add('hidden');
+        }, 4000);
+      }
+
+      function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      const SEVERITY_CLASS = {
+        Critical: 'label-danger',
+        High:     'label-warning',
+        Medium:   'label-info',
+        Low:      'label-primary',
+        Info:     'label-default',
+      };
+
+      let currentFinding = null;
+
+      async function loadFinding() {
+        try {
+          const f = await apiFetch('/api/v1/findings/' + encodeURIComponent(findingId));
+          currentFinding = f;
+
+          document.title = 'RedBoard — ' + f.title;
+          document.getElementById('breadcrumb-title').textContent = f.title;
+          document.getElementById('finding-title').textContent    = f.title;
+
+          const sevEl = document.getElementById('finding-severity');
+          sevEl.textContent = f.severity;
+          sevEl.className   = 'label ' + (SEVERITY_CLASS[f.severity] || 'label-default');
+
+          document.getElementById('finding-status').textContent = f.status;
+          document.getElementById('finding-mitre-id').textContent   = f.mitre_id   || '—';
+          document.getElementById('finding-mitre-name').textContent = f.mitre_name || '—';
+          document.getElementById('finding-created-by').textContent = f.created_by_username || '—';
+          document.getElementById('finding-created-at').textContent = f.created_at ? new Date(f.created_at).toLocaleString() : '—';
+          document.getElementById('finding-reproduction').textContent = f.reproduction_steps || '—';
+          document.getElementById('finding-remediation').textContent  = f.remediation_recs   || '—';
+
+          // Link to parent engagement
+          if (f.engagement_id) {
+            const engLink = document.getElementById('finding-engagement-link');
+            engLink.href        = 'engagement-detail.html?id=' + encodeURIComponent(f.engagement_id);
+            engLink.textContent = f.engagement_name || f.engagement_id;
+          }
+
+          // Report download button — lead/admin only, tied to parent engagement
+          if ((user.role === 'lead' || user.role === 'admin') && f.engagement_id) {
+            const reportBtn = document.getElementById('btn-download-report');
+            reportBtn.classList.remove('hidden');
+            reportBtn.addEventListener('click', function () {
+              downloadReport(f.engagement_id, reportBtn);
+            });
+          }
+
+          // Delete button — lead/admin only
+          if (user.role === 'lead' || user.role === 'admin') {
+            document.getElementById('btn-delete-finding').classList.remove('hidden');
+          }
+
+          // Pre-populate edit form
+          document.getElementById('edit-title').value       = f.title       || '';
+          document.getElementById('edit-severity').value   = f.severity     || 'High';
+          document.getElementById('edit-status').value     = f.status       || 'open';
+          document.getElementById('edit-mitre-id').value   = f.mitre_id     || '';
+          document.getElementById('edit-mitre-name').value = f.mitre_name   || '';
+          document.getElementById('edit-reproduction').value = f.reproduction_steps || '';
+          document.getElementById('edit-remediation').value  = f.remediation_recs   || '';
+
+        } catch (err) {
+          showPageError(err.message || 'Failed to load finding.');
+        }
+      }
+
+      // Toggle edit form
+      const editBox = document.getElementById('edit-box');
+      document.getElementById('btn-toggle-edit').addEventListener('click', function () {
+        editBox.classList.toggle('hidden');
+      });
+      document.getElementById('btn-cancel-edit').addEventListener('click', function () {
+        editBox.classList.add('hidden');
+      });
+
+      // Edit form submit
+      document.getElementById('edit-finding-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const editErr = document.getElementById('edit-error');
+        editErr.classList.add('hidden');
+
+        const payload = {
+          title:               document.getElementById('edit-title').value.trim(),
+          severity:            document.getElementById('edit-severity').value,
+          status:              document.getElementById('edit-status').value,
+          mitre_id:            document.getElementById('edit-mitre-id').value.trim() || null,
+          mitre_name:          document.getElementById('edit-mitre-name').value.trim() || null,
+          reproduction_steps:  document.getElementById('edit-reproduction').value.trim() || null,
+          remediation_recs:    document.getElementById('edit-remediation').value.trim() || null,
+        };
+
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        try {
+          await apiFetch('/api/v1/findings/' + encodeURIComponent(findingId), {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+          });
+          showPageSuccess('Finding updated successfully.');
+          editBox.classList.add('hidden');
+          await loadFinding();
+          await loadEvidence();
+        } catch (err) {
+          editErr.textContent = err.message || 'Failed to update finding.';
+          editErr.classList.remove('hidden');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      // Delete finding
+      document.getElementById('btn-delete-finding').addEventListener('click', async function () {
+        if (!confirm('Delete this finding and all its evidence files? This cannot be undone.')) return;
+        this.disabled = true;
+        try {
+          await apiFetch('/api/v1/findings/' + encodeURIComponent(findingId), { method: 'DELETE' });
+          window.location.replace('findings.html');
+        } catch (err) {
+          showPageError(err.message || 'Failed to delete finding.');
+          this.disabled = false;
+        }
+      });
+
+      // Evidence list
+      async function loadEvidence() {
+        const list    = document.getElementById('evidence-list');
+        const errEl   = document.getElementById('evidence-error');
+        errEl.classList.add('hidden');
+        list.innerHTML = '<li class="text-muted">Loading…</li>';
+        try {
+          const items = await apiFetch('/api/v1/evidence/' + encodeURIComponent(findingId) + '/files');
+          const arr   = Array.isArray(items) ? items : (items && items.items ? items.items : []);
+          if (arr.length === 0) {
+            list.innerHTML = '<li class="text-muted">No evidence files.</li>';
+            return;
+          }
+          list.innerHTML = arr.map(function (ev) {
+            const canDelete = user.role === 'lead' || user.role === 'admin';
+            return '<li style="margin-bottom:6px;">' +
+              '<button class="btn btn-xs btn-default" onclick="downloadEvidence(\'' + escapeHtml(ev.id) + '\')" title="Download">' +
+                '<i class="fa fa-download"></i>' +
+              '</button> ' +
+              escapeHtml(ev.original_filename) +
+              ' <small class="text-muted">(' + formatBytes(ev.file_size_bytes) + ')</small>' +
+              (canDelete
+                ? ' <button class="btn btn-xs btn-danger pull-right" onclick="deleteEvidenceAndReload(\'' + escapeHtml(ev.id) + '\')" title="Delete"><i class="fa fa-trash"></i></button>'
+                : '') +
+              '</li>';
+          }).join('');
+        } catch (err) {
+          list.innerHTML = '';
+          errEl.textContent = err.message || 'Failed to load evidence.';
+          errEl.classList.remove('hidden');
+        }
+      }
+
+      function formatBytes(bytes) {
+        if (!bytes) return '0 B';
+        const k = 1024;
+        const units = ['B','KB','MB','GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + units[i];
+      }
+
+      // deleteEvidence wrapper that reloads the list
+      window.deleteEvidenceAndReload = async function (evidenceId) {
+        if (!confirm('Delete this evidence file?')) return;
+        try {
+          await deleteEvidence(evidenceId);
+          await loadEvidence();
+        } catch (err) {
+          const errEl = document.getElementById('evidence-error');
+          errEl.textContent = err.message || 'Failed to delete evidence.';
+          errEl.classList.remove('hidden');
+        }
+      };
+
+      // Evidence upload form
+      document.getElementById('upload-evidence-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('evidence-file-input');
+        const errEl     = document.getElementById('evidence-error');
+        errEl.classList.add('hidden');
+
+        if (!fileInput.files || !fileInput.files[0]) {
+          errEl.textContent = 'Please select a file.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        try {
+          await uploadEvidence(findingId, fileInput.files[0]);
+          fileInput.value = '';
+          await loadEvidence();
+        } catch (err) {
+          errEl.textContent = err.message || 'Upload failed.';
+          errEl.classList.remove('hidden');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      // Initialise
+      loadFinding();
+      loadEvidence();
+    })();
+  </script>
+</body>
+</html>

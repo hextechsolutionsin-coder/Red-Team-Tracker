@@ -1,0 +1,138 @@
+/**
+ * app.css — Application-level styles for RedBoard.
+ *
+ * Bootstrap handles the heavy lifting. This file adds only the narrow set of
+ * overrides and custom components that Bootstrap does not cover.
+ */
+
+/* ── Global ──────────────────────────────────────────────────────────────── */
+
+body {
+  background-color: #f4f4f4;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ── Login page ──────────────────────────────────────────────────────────── */
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #2c2c2c;
+}
+
+.login-box {
+  background: #fff;
+  border-radius: 4px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  margin-top: 60px;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #c0392b;
+}
+
+.login-logo h2 {
+  margin-top: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #222;
+}
+
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+
+.navbar-redboard {
+  background-color: #c0392b;
+  border-color: #a93226;
+}
+
+.navbar-redboard .navbar-brand,
+.navbar-redboard .navbar-nav > li > a {
+  color: #fff;
+}
+
+.navbar-redboard .navbar-nav > li > a:hover,
+.navbar-redboard .navbar-nav > li > a:focus {
+  background-color: #a93226;
+  color: #fff;
+}
+
+.navbar-redboard .navbar-nav > .active > a,
+.navbar-redboard .navbar-nav > .active > a:hover {
+  background-color: #922b21;
+  color: #fff;
+}
+
+/* ── Page wrapper ────────────────────────────────────────────────────────── */
+
+.page-wrapper {
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+
+/* ── Utility helpers ─────────────────────────────────────────────────────── */
+
+.hidden {
+  display: none !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* ── Severity badges ─────────────────────────────────────────────────────── */
+
+.badge-critical { background-color: #7b241c; color: #fff; }
+.badge-high     { background-color: #c0392b; color: #fff; }
+.badge-medium   { background-color: #e67e22; color: #fff; }
+.badge-low      { background-color: #f1c40f; color: #222; }
+.badge-info     { background-color: #3498db; color: #fff; }
+
+/* ── Status labels ───────────────────────────────────────────────────────── */
+
+.label-planned   { background-color: #95a5a6; }
+.label-active    { background-color: #27ae60; }
+.label-completed { background-color: #2980b9; }
+.label-archived  { background-color: #7f8c8d; }
+
+/* ── Loading spinner overlay ─────────────────────────────────────────────── */
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* ── Inline error banner ─────────────────────────────────────────────────── */
+
+.inline-error {
+  margin-top: 12px;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+.table-actions .btn {
+  margin-right: 4px;
+}
+
+/* ── Cards / panels ──────────────────────────────────────────────────────── */
+
+.panel-stat .panel-heading {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-stat .stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+}

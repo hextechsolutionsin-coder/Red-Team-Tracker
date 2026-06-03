@@ -1,0 +1,40 @@
+# =============================================================================
+# Red Team Operations Tracker — Backend Python dependencies
+# All versions are pinned for reproducible builds.
+# =============================================================================
+
+# Web framework & ASGI server
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Database (async SQLAlchemy + asyncpg driver)
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+
+# Database migrations
+alembic==1.14.0
+
+# Configuration management
+pydantic-settings==2.6.1
+
+# Password hashing
+passlib[bcrypt]==1.7.4
+
+# File uploads (multipart/form-data)
+python-multipart==0.0.18
+
+# PDF generation
+weasyprint==63.1
+
+# HTML templating (for PDF reports)
+jinja2==3.1.5
+
+# Testing
+hypothesis==6.122.3
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1
+aiosqlite==0.20.0
+
+# Utilities
+anyio==4.7.0

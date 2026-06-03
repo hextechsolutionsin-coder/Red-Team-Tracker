@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedBoard — Dashboard</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- ── Navbar ─────────────────────────────────────────────────────── -->
+  <nav class="navbar navbar-default navbar-fixed-top navbar-redboard" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="dashboard.html">
+          <i class="fa fa-crosshairs"></i> RedBoard
+        </a>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbar-main">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="dashboard.html"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+          <li><a href="engagements.html"><i class="fa fa-briefcase"></i> Engagements</a></li>
+          <li><a href="findings.html"><i class="fa fa-bug"></i> Findings</a></li>
+          <li><a href="logs.html"><i class="fa fa-list-alt"></i> Logs</a></li>
+          <li id="nav-users" class="hidden"><a href="users.html"><i class="fa fa-users"></i> Users</a></li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+          <li>
+            <a href="#" id="navbar-username" class="disabled">
+              <i class="fa fa-user"></i> <span id="navbar-username-text">—</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" id="logout-btn">
+              <i class="fa fa-sign-out"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Page content ───────────────────────────────────────────────── -->
+  <div class="container-fluid page-wrapper" style="padding-top: 70px;">
+
+    <!-- Page header -->
+    <div class="row">
+      <div class="col-sm-12">
+        <h1 class="page-header">
+          <i class="fa fa-tachometer"></i> Dashboard
+          <small>Operations Overview</small>
+          <button id="refresh-btn" class="btn btn-default btn-sm pull-right" style="margin-top: 10px;">
+            <i class="fa fa-refresh" id="refresh-icon"></i> Refresh
+          </button>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Inline error banner (hidden by default) -->
+    <div class="row">
+      <div class="col-sm-12">
+        <div id="dashboard-error" class="alert alert-danger hidden inline-error" role="alert">
+          <i class="fa fa-exclamation-circle"></i>
+          <strong>Error loading dashboard data:</strong>
+          <span id="dashboard-error-msg">An error occurred.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stat panels row ──────────────────────────────────────────── -->
+    <div class="row" id="stats-row">
+
+      <!-- Active Engagements -->
+      <div class="col-sm-6 col-md-3">
+        <div class="panel panel-primary panel-stat">
+          <div class="panel-heading">
+            <i class="fa fa-briefcase fa-fw"></i> Active Engagements
+          </div>
+          <div class="panel-body text-center">
+            <p class="stat-value" id="stat-active-engagements">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open Findings -->
+      <div class="col-sm-6 col-md-3">
+        <div class="panel panel-warning panel-stat">
+          <div class="panel-heading">
+            <i class="fa fa-bug fa-fw"></i> Open Findings
+          </div>
+          <div class="panel-body text-center">
+            <p class="stat-value" id="stat-open-findings">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Severity breakdown (clickable) -->
+      <div class="col-sm-12 col-md-6">
+        <div class="panel panel-default panel-stat">
+          <div class="panel-heading">
+            <i class="fa fa-bar-chart fa-fw"></i> Findings by Severity
+          </div>
+          <div class="panel-body">
+            <div class="row text-center" id="severity-counts">
+              <div class="col-xs-2">
+                <a href="#" class="severity-link" data-severity="Critical" title="View Critical findings">
+                  <span class="badge badge-critical stat-severity-value" id="sev-Critical">—</span><br>
+                  <small>Critical</small>
+                </a>
+              </div>
+              <div class="col-xs-2">
+                <a href="#" class="severity-link" data-severity="High" title="View High findings">
+                  <span class="badge badge-high stat-severity-value" id="sev-High">—</span><br>
+                  <small>High</small>
+                </a>
+              </div>
+              <div class="col-xs-3">
+                <a href="#" class="severity-link" data-severity="Medium" title="View Medium findings">
+                  <span class="badge badge-medium stat-severity-value" id="sev-Medium">—</span><br>
+                  <small>Medium</small>
+                </a>
+              </div>
+              <div class="col-xs-2">
+                <a href="#" class="severity-link" data-severity="Low" title="View Low findings">
+                  <span class="badge badge-low stat-severity-value" id="sev-Low">—</span><br>
+                  <small>Low</small>
+                </a>
+              </div>
+              <div class="col-xs-3">
+                <a href="#" class="severity-link" data-severity="Info" title="View Info findings">
+                  <span class="badge badge-info stat-severity-value" id="sev-Info">—</span><br>
+                  <small>Info</small>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /stats-row -->
+
+    <!-- ── Chart + Recent Logs ──────────────────────────────────────── -->
+    <div class="row">
+
+      <!-- Severity chart (donut) -->
+      <div class="col-md-5">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <i class="fa fa-pie-chart fa-fw"></i> Severity Distribution
+          </div>
+          <div class="panel-body text-center">
+            <canvas id="severity-chart" width="300" height="300" style="max-width: 300px; margin: 0 auto; display: block;"></canvas>
+            <p id="chart-no-data" class="text-muted hidden" style="margin-top: 16px;">No findings to display.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity log -->
+      <div class="col-md-7">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <i class="fa fa-clock-o fa-fw"></i> Recent Activity
+            <span class="badge pull-right" id="recent-log-count">—</span>
+          </div>
+          <div class="panel-body" style="padding: 0;">
+            <div id="recent-logs-container">
+              <table class="table table-condensed table-hover" id="recent-logs-table" style="margin: 0;">
+                <thead>
+                  <tr>
+                    <th style="width: 160px;">Time (UTC)</th>
+                    <th style="width: 130px;">Action</th>
+                    <th style="width: 110px;">Actor</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-logs-tbody">
+                  <tr id="logs-placeholder">
+                    <td colspan="4" class="text-center text-muted">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /chart+logs row -->
+
+  </div><!-- /container-fluid -->
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="vendor/chartjs/chart.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

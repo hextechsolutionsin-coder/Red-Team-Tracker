@@ -1,0 +1,46 @@
+# Kiro IDE spec files (not needed in the repo)
+.kiro/
+
+# VS Code workspace settings (editor-specific, not project config)
+.vscode/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+.venv/
+venv/
+env/
+ENV/
+.env
+*.env
+
+# pytest cache
+.pytest_cache/
+.hypothesis/
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Node (in case)
+node_modules/
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (runtime data, not code)
+uploads/

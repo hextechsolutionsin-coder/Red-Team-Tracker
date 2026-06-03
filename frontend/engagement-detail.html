@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedBoard — Engagement Detail</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-redboard navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="dashboard.html">
+          <i class="fa fa-crosshairs"></i> RedBoard
+        </a>
+      </div>
+      <div class="collapse navbar-collapse" id="main-nav">
+        <ul class="nav navbar-nav">
+          <li><a href="dashboard.html"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+          <li class="active"><a href="engagements.html"><i class="fa fa-briefcase"></i> Engagements</a></li>
+          <li><a href="findings.html"><i class="fa fa-bug"></i> Findings</a></li>
+          <li id="nav-logs" class="hidden"><a href="logs.html"><i class="fa fa-list-alt"></i> Logs</a></li>
+          <li id="nav-users" class="hidden"><a href="users.html"><i class="fa fa-users"></i> Users</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#" id="nav-username"><i class="fa fa-user-circle"></i> </a></li>
+          <li><a href="#" id="logout-btn"><i class="fa fa-sign-out"></i> Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid page-wrapper" style="padding-top: 70px; padding-bottom: 40px;">
+
+    <!-- Breadcrumb -->
+    <ol class="breadcrumb" style="margin-bottom: 16px;">
+      <li><a href="dashboard.html"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+      <li><a href="engagements.html">Engagements</a></li>
+      <li class="active" id="breadcrumb-name">Loading…</li>
+    </ol>
+
+    <!-- Page-level alerts -->
+    <div id="page-error" class="alert alert-danger hidden" role="alert">
+      <i class="fa fa-exclamation-circle"></i>
+      <span id="page-error-msg"></span>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="detail-loading" class="text-center" style="padding: 60px 0;">
+      <i class="fa fa-spinner fa-spin fa-3x text-muted"></i>
+      <p class="text-muted" style="margin-top: 16px;">Loading engagement…</p>
+    </div>
+
+    <!-- Detail content (hidden until loaded) -->
+    <div id="detail-content" class="hidden">
+
+      <div class="row">
+
+        <!-- Left column: engagement info + actions -->
+        <div class="col-md-8">
+
+          <!-- Engagement info panel -->
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <i class="fa fa-briefcase"></i>
+                <span id="eng-name">—</span>
+                <span class="pull-right" id="eng-status"></span>
+              </h3>
+            </div>
+            <div class="panel-body">
+              <table class="table table-bordered" style="margin-bottom: 0;">
+                <tbody>
+                  <tr>
+                    <th style="width: 150px; white-space: nowrap;">Start Date</th>
+                    <td id="eng-start-date">—</td>
+                    <th style="width: 110px; white-space: nowrap;">End Date</th>
+                    <td id="eng-end-date">—</td>
+                  </tr>
+                  <tr>
+                    <th>Description</th>
+                    <td colspan="3" id="eng-description" class="text-muted">—</td>
+                  </tr>
+                  <tr>
+                    <th>Scope</th>
+                    <td colspan="3" id="eng-scope" class="text-muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="panel-footer">
+              <!-- Advance-status button (lead/admin only; forward-only per Req 4.3) -->
+              <button id="btn-advance-status" class="btn btn-warning hidden" type="button">
+                <i class="fa fa-arrow-right"></i>
+                <span id="btn-advance-label">Advance Status</span>
+              </button>
+
+              <!-- Generate PDF report (lead/admin only) -->
+              <button id="btn-report" class="btn btn-default pull-right hidden" type="button" title="Download PDF Report">
+                <i class="fa fa-file-pdf-o"></i> Download Report
+              </button>
+            </div>
+          </div>
+
+          <!-- Status change alerts -->
+          <div id="status-error" class="alert alert-danger hidden" role="alert">
+            <i class="fa fa-exclamation-circle"></i>
+            <span id="status-error-msg"></span>
+          </div>
+          <div id="status-success" class="alert alert-success hidden" role="alert">
+            <i class="fa fa-check-circle"></i>
+            <span id="status-success-msg"></span>
+          </div>
+
+          <!-- Findings summary panel (Req 4.7) -->
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <i class="fa fa-bug"></i> Findings
+                <a id="findings-link" href="findings.html" class="btn btn-xs btn-default pull-right">
+                  <i class="fa fa-list"></i> View All Findings
+                </a>
+              </h3>
+            </div>
+            <div class="panel-body text-muted">
+              <p style="margin: 0;">
+                Click "View All Findings" to see all findings for this engagement.
+              </p>
+            </div>
+          </div>
+
+        </div><!-- /.col-md-8 -->
+
+        <!-- Right column: operators -->
+        <div class="col-md-4">
+
+          <!-- Assigned operators panel -->
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title"><i class="fa fa-users"></i> Assigned Operators</h3>
+            </div>
+            <div class="panel-body">
+              <ul id="operators-list" class="list-unstyled" style="margin-bottom: 0;"></ul>
+              <p id="no-operators-msg" class="text-muted" style="margin: 0;">
+                <i class="fa fa-info-circle"></i> No operators assigned yet.
+              </p>
+            </div>
+          </div>
+
+          <!-- Assign operator panel (lead/admin only, Req 4.8) -->
+          <div id="assign-operator-section" class="panel panel-warning hidden">
+            <div class="panel-heading">
+              <h3 class="panel-title"><i class="fa fa-user-plus"></i> Assign Operator</h3>
+            </div>
+            <div class="panel-body">
+              <p class="text-muted small">
+                Enter the UUID of an operator-role user to assign them to this engagement.
+              </p>
+              <div class="form-group">
+                <label for="assign-operator-id" class="sr-only">Operator User ID</label>
+                <input type="text"
+                       id="assign-operator-id"
+                       class="form-control"
+                       placeholder="Operator UUID (e.g. a1b2c3d4-…)">
+              </div>
+              <div id="assign-error" class="alert alert-danger hidden" role="alert">
+                <i class="fa fa-exclamation-circle"></i>
+                <span id="assign-error-msg"></span>
+              </div>
+              <div id="assign-success" class="alert alert-success hidden" role="alert">
+                <i class="fa fa-check-circle"></i>
+                <span id="assign-success-msg"></span>
+              </div>
+              <button id="btn-assign" class="btn btn-warning btn-block" type="button">
+                <i class="fa fa-plus"></i> Assign
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /.col-md-4 -->
+
+      </div><!-- /.row -->
+
+    </div><!-- /#detail-content -->
+
+  </div><!-- /.container-fluid -->
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/engagements.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      EngagementDetailPage.init();
+    })();
+  </script>
+</body>
+</html>

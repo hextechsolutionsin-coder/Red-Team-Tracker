@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Red Team Engagement Report — {{ engagement_name }}</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /*  Base styles                                                         */
+    /* ------------------------------------------------------------------ */
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Page layout (WeasyPrint paged media)                               */
+    /* ------------------------------------------------------------------ */
+    @page {
+      size: A4;
+      margin: 2cm 2.5cm;
+      @bottom-center {
+        content: "Page " counter(page) " of " counter(pages);
+        font-size: 9pt;
+        color: #777;
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Cover / header                                                      */
+    /* ------------------------------------------------------------------ */
+    .report-header {
+      border-bottom: 3px solid #c0392b;
+      padding-bottom: 12pt;
+      margin-bottom: 20pt;
+    }
+
+    .report-header h1 {
+      font-size: 22pt;
+      font-weight: 700;
+      color: #c0392b;
+      margin: 0 0 4pt 0;
+    }
+
+    .report-header .subtitle {
+      font-size: 10pt;
+      color: #555;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Section headings                                                    */
+    /* ------------------------------------------------------------------ */
+    h2 {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #2c3e50;
+      border-bottom: 1px solid #bdc3c7;
+      padding-bottom: 4pt;
+      margin-top: 20pt;
+      margin-bottom: 10pt;
+    }
+
+    h3 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-top: 14pt;
+      margin-bottom: 6pt;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Metadata table                                                      */
+    /* ------------------------------------------------------------------ */
+    .metadata-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12pt;
+    }
+
+    .metadata-table th,
+    .metadata-table td {
+      padding: 5pt 8pt;
+      text-align: left;
+      vertical-align: top;
+      border: 1px solid #dde1e5;
+      font-size: 10pt;
+    }
+
+    .metadata-table th {
+      background-color: #f4f6f8;
+      font-weight: 600;
+      width: 30%;
+      color: #2c3e50;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Severity summary table                                              */
+    /* ------------------------------------------------------------------ */
+    .severity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12pt;
+    }
+
+    .severity-table th,
+    .severity-table td {
+      padding: 5pt 8pt;
+      text-align: center;
+      border: 1px solid #dde1e5;
+      font-size: 10pt;
+    }
+
+    .severity-table th {
+      background-color: #f4f6f8;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    /* Severity colour badges */
+    .sev-Critical { color: #fff; background-color: #8e1414; font-weight: 700; }
+    .sev-High     { color: #fff; background-color: #c0392b; font-weight: 700; }
+    .sev-Medium   { color: #fff; background-color: #d35400; font-weight: 700; }
+    .sev-Low      { color: #fff; background-color: #d4ac0d; font-weight: 700; }
+    .sev-Info     { color: #fff; background-color: #2980b9; font-weight: 700; }
+
+    .sev-badge {
+      display: inline-block;
+      padding: 2pt 6pt;
+      border-radius: 3pt;
+      font-size: 9pt;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Finding cards                                                       */
+    /* ------------------------------------------------------------------ */
+    .finding-card {
+      border: 1px solid #dde1e5;
+      border-radius: 4pt;
+      padding: 10pt 12pt;
+      margin-bottom: 16pt;
+      page-break-inside: avoid;
+    }
+
+    .finding-title {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #2c3e50;
+      margin: 0 0 6pt 0;
+    }
+
+    .finding-meta {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8pt;
+    }
+
+    .finding-meta th,
+    .finding-meta td {
+      padding: 3pt 6pt;
+      text-align: left;
+      border: 1px solid #eaecef;
+      font-size: 9.5pt;
+    }
+
+    .finding-meta th {
+      background-color: #f9fafb;
+      font-weight: 600;
+      width: 25%;
+      color: #555;
+    }
+
+    .finding-section-label {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #2c3e50;
+      margin: 10pt 0 3pt 0;
+    }
+
+    .finding-body {
+      font-size: 10pt;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background-color: #f9fafb;
+      border: 1px solid #eaecef;
+      border-radius: 3pt;
+      padding: 6pt 8pt;
+      margin: 0 0 8pt 0;
+    }
+
+    .evidence-list {
+      margin: 4pt 0 0 16pt;
+      padding: 0;
+      font-size: 9.5pt;
+    }
+
+    .evidence-list li {
+      margin-bottom: 2pt;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  No-findings note (Requirement 9.5)                                 */
+    /* ------------------------------------------------------------------ */
+    .no-findings-note {
+      border: 2px solid #2980b9;
+      border-radius: 4pt;
+      background-color: #eaf4fb;
+      padding: 12pt 16pt;
+      font-size: 12pt;
+      font-weight: 600;
+      color: #1a5276;
+      text-align: center;
+      margin: 20pt 0;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Footer                                                              */
+    /* ------------------------------------------------------------------ */
+    .report-footer {
+      border-top: 1px solid #bdc3c7;
+      padding-top: 8pt;
+      margin-top: 30pt;
+      font-size: 8.5pt;
+      color: #888;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================================================================ -->
+  <!-- Report header                                                      -->
+  <!-- ================================================================ -->
+  <div class="report-header">
+    <h1>Red Team Engagement Report</h1>
+    <div class="subtitle">
+      Generated on {{ report_date.strftime("%B %d, %Y") }} &nbsp;|&nbsp;
+      CONFIDENTIAL — For authorised recipients only
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- Section 1: Engagement metadata (Requirement 9.1)                  -->
+  <!-- ================================================================ -->
+  <h2>1. Engagement Overview</h2>
+
+  <table class="metadata-table">
+    <tr>
+      <th>Engagement Name</th>
+      <td>{{ engagement_name }}</td>
+    </tr>
+    <tr>
+      <th>Status</th>
+      <td>{{ engagement_status | capitalize }}</td>
+    </tr>
+    <tr>
+      <th>Start Date</th>
+      <td>{{ engagement_start_date.strftime("%Y-%m-%d") if engagement_start_date else "—" }}</td>
+    </tr>
+    <tr>
+      <th>End Date</th>
+      <td>{{ engagement_end_date.strftime("%Y-%m-%d") if engagement_end_date else "—" }}</td>
+    </tr>
+    <tr>
+      <th>Scope</th>
+      <td>{{ engagement_scope if engagement_scope else "—" }}</td>
+    </tr>
+  </table>
+
+  <!-- ================================================================ -->
+  <!-- Section 2: Finding summary by severity (Requirement 9.1)          -->
+  <!-- ================================================================ -->
+  <h2>2. Findings Summary</h2>
+
+  <table class="severity-table">
+    <thead>
+      <tr>
+        <th>Critical</th>
+        <th>High</th>
+        <th>Medium</th>
+        <th>Low</th>
+        <th>Info</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ severity_counts.Critical }}</td>
+        <td>{{ severity_counts.High }}</td>
+        <td>{{ severity_counts.Medium }}</td>
+        <td>{{ severity_counts.Low }}</td>
+        <td>{{ severity_counts.Info }}</td>
+        <td><strong>{{ findings | length }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ================================================================ -->
+  <!-- Section 3: Findings detail / no-findings note                     -->
+  <!-- ================================================================ -->
+  <h2>3. Findings Detail</h2>
+
+  {% if not has_findings %}
+  <!-- No-findings note — clearly visible, required by Requirement 9.5   -->
+  <div class="no-findings-note">
+    &#9432;&nbsp; No findings recorded for this engagement.
+  </div>
+  {% else %}
+  <!-- Findings list ordered by severity (Requirement 9.2)               -->
+  {% for finding in findings %}
+  <div class="finding-card">
+    <p class="finding-title">{{ loop.index }}. {{ finding.title }}</p>
+
+    <table class="finding-meta">
+      <tr>
+        <th>Severity</th>
+        <td>
+          <span class="sev-badge sev-{{ finding.severity }}">
+            {{ finding.severity }}
+          </span>
+        </td>
+        <th>Status</th>
+        <td>{{ finding.status }}</td>
+      </tr>
+      <tr>
+        <th>MITRE ATT&amp;CK</th>
+        <td colspan="3">
+          {% if finding.mitre_id %}
+            <strong>{{ finding.mitre_id }}</strong>
+            {% if finding.mitre_name %} — {{ finding.mitre_name }}{% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    <!-- Reproduction steps (Requirement 9.1) -->
+    <p class="finding-section-label">Reproduction Steps</p>
+    {% if finding.reproduction_steps %}
+    <pre class="finding-body">{{ finding.reproduction_steps }}</pre>
+    {% else %}
+    <p class="finding-body"><em>Not provided.</em></p>
+    {% endif %}
+
+    <!-- Remediation recommendations (Requirement 9.1) -->
+    <p class="finding-section-label">Remediation Recommendations</p>
+    {% if finding.remediation_recs %}
+    <pre class="finding-body">{{ finding.remediation_recs }}</pre>
+    {% else %}
+    <p class="finding-body"><em>Not provided.</em></p>
+    {% endif %}
+
+    <!-- Evidence filenames — no binary content (Requirement 9.6) -->
+    <p class="finding-section-label">Evidence Files</p>
+    {% if finding.evidence_filenames %}
+    <ul class="evidence-list">
+      {% for filename in finding.evidence_filenames %}
+      <li>{{ filename }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="font-size:9.5pt; color:#777; margin:4pt 0 0 0;"><em>No evidence files attached.</em></p>
+    {% endif %}
+
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ================================================================ -->
+  <!-- Footer                                                             -->
+  <!-- ================================================================ -->
+  <div class="report-footer">
+    Red Team Operations Tracker &nbsp;|&nbsp;
+    Report generated on {{ report_date.strftime("%Y-%m-%d") }} &nbsp;|&nbsp;
+    CONFIDENTIAL
+  </div>
+
+</body>
+</html>
