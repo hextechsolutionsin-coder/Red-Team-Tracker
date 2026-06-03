@@ -10,6 +10,7 @@ Startup sequence (inside lifespan):
 import logging
 import sys
 from contextlib import asynccontextmanager
+from concurrent.futures import ThreadPoolExecutor
 from typing import AsyncGenerator
 
 from alembic import command as alembic_command
@@ -91,10 +92,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001
     Runs startup validation and migrations before the application begins
     accepting requests; runs any teardown logic on shutdown.
     """
+    import asyncio
+
     # --- Startup ---
     logger.info("Starting Red Team Operations Tracker backend…")
     _validate_env_vars()
-    _run_migrations()
+
+    # Run migrations in a thread pool to avoid asyncio.run() conflict
+    # (alembic's async env.py uses asyncio.run() internally, which cannot
+    # be called inside an already-running event loop)
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        try:
+            await loop.run_in_executor(pool, _run_migrations)
+        except SystemExit as exc:
+            raise RuntimeError(f"Migration failed, exiting with code {exc.code}") from exc
+
     logger.info("Startup complete — accepting requests.")
 
     yield  # Application runs here
