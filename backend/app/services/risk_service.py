@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 # Valid values for risk-related fields
 # ---------------------------------------------------------------------------
 
-VALID_AFFECTED_ASSET_TYPES = {"Network", "Application", "Data", "Personnel", "Physical"}
+VALID_AFFECTED_ASSET_TYPES = {"Network", "Application", "Data", "Personnel", "Physical", "Cloud", "Endpoint", "IoT", "Identity", "Supply Chain"}
 VALID_NIST_CSF_FUNCTIONS = {"Govern", "Identify", "Protect", "Detect", "Respond", "Recover"}
 VALID_ISO_CONTROLS = {"A.5", "A.6", "A.7", "A.8"}
 

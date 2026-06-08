@@ -136,3 +136,100 @@ body {
   font-weight: 700;
   line-height: 1;
 }
+
+
+/* ── Animations ───────────────────────────────────────────────────── */
+
+/* Fade-in for panels on page load */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.panel, .box {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.panel:nth-child(1) { animation-delay: 0.05s; }
+.panel:nth-child(2) { animation-delay: 0.1s; }
+.panel:nth-child(3) { animation-delay: 0.15s; }
+.panel:nth-child(4) { animation-delay: 0.2s; }
+
+/* Stat value count-up feel */
+.stat-value {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+.stat-value:hover {
+  transform: scale(1.1);
+}
+
+/* Severity badges pulse on hover */
+.badge-critical, .badge-high, .badge-medium, .badge-low, .badge-info {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.badge-critical:hover, .badge-high:hover, .badge-medium:hover, .badge-low:hover, .badge-info:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Risk score label animation */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+#org-risk-rating, #cf-risk-preview-rating {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Table row hover highlight */
+.table-hover tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+/* Modal slide-in */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: translateY(-30px);
+}
+.modal.in .modal-dialog {
+  transform: translateY(0);
+}
+
+/* Smooth panel collapse */
+.panel-body, .box-body {
+  transition: max-height 0.3s ease;
+}
+
+/* Risk preview box glow */
+#cf-risk-preview {
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+#cf-risk-preview:not([style*="display: none"]) {
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Loading spinner smooth */
+.fa-spin {
+  animation: fa-spin 1s infinite linear;
+}
+
+/* Navbar brand hover */
+.navbar-brand {
+  transition: color 0.2s ease;
+}
+.navbar-brand:hover {
+  color: #fff !important;
+}
+
+/* Button hover transitions */
+.btn {
+  transition: all 0.2s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+.btn:active {
+  transform: translateY(0);
+}

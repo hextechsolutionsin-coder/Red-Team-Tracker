@@ -117,15 +117,42 @@
    *           findings_by_severity: { Critical: number, High: number,
    *                                   Medium: number, Low: number, Info: number } }} stats
    */
+  /**
+   * Animate a numeric value from start to end over duration milliseconds.
+   *
+   * @param {HTMLElement} element
+   * @param {number} start
+   * @param {number} end
+   * @param {number} duration
+   */
+  function animateValue(element, start, end, duration) {
+    if (start === end) return;
+    var range = end - start;
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      element.textContent = Math.floor(progress * range + start);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   function renderStats(stats) {
     statActive.textContent = stats.active_engagements;
     statOpen.textContent   = stats.open_findings;
+
+    // Animate stat values from 0 to their final value
+    animateValue(statActive, 0, stats.active_engagements, 800);
+    animateValue(statOpen, 0, stats.open_findings, 800);
 
     const sev = stats.findings_by_severity;
     sevIds.forEach(function (s) {
       const el = document.getElementById('sev-' + s);
       if (el) {
-        el.textContent = sev[s] != null ? sev[s] : 0;
+        var val = sev[s] != null ? sev[s] : 0;
+        el.textContent = val;
+        animateValue(el, 0, val, 800);
       }
     });
 
@@ -245,6 +272,8 @@
       orgScoreEl.textContent  = risk.org_risk_score;
       orgRatingEl.textContent = risk.org_risk_rating || '—';
       orgRatingEl.className   = 'label ' + riskRatingLabelClass(risk.org_risk_rating);
+      // Animate the org risk score number
+      animateValue(orgScoreEl, 0, Math.round(risk.org_risk_score), 800);
     } else {
       orgScoreEl.textContent  = '—';
       orgRatingEl.textContent = 'No data';

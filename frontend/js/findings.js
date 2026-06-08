@@ -449,6 +449,12 @@
     ratingEl.textContent  = rating;
     ratingEl.className    = 'label ' + ratingClass;
     previewDiv.style.display = 'block';
+
+    // Auto-assign severity based on computed risk score
+    var severitySelect = document.getElementById('cf-severity');
+    if (severitySelect) {
+      severitySelect.value = rating;
+    }
   }
 
   ['cf-likelihood', 'cf-impact', 'cf-asset-criticality'].forEach(function (id) {
