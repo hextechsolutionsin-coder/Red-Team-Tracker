@@ -541,14 +541,17 @@ var EngagementDetailPage = (function () {
 
     if (canAdvance) {
       if (transitions.length === 1) {
-        // Single transition — render as a simple button
+        // Single transition — render a button inside the container
         var target = transitions[0];
         var capitalised = target.charAt(0).toUpperCase() + target.slice(1);
-        btnContainer.className = 'btn btn-warning';
+        btnContainer.innerHTML = '<button type="button" class="btn btn-warning" id="btn-advance-single">' +
+          '<i class="fa fa-arrow-right"></i> Advance to ' + capitalised +
+          '</button>';
         btnContainer.style.display = 'inline-block';
-        btnContainer.innerHTML = '<i class="fa fa-arrow-right"></i> <span id="btn-advance-label">Advance to ' + capitalised + '</span>';
-        btnContainer.onclick = function () { submitAdvanceStatus(target); };
         btnContainer.classList.remove('hidden');
+        document.getElementById('btn-advance-single').addEventListener('click', function () {
+          submitAdvanceStatus(target);
+        });
       } else {
         // Multiple transitions — render as a dropdown button group
         var html = '<div class="btn-group">' +
@@ -563,11 +566,8 @@ var EngagementDetailPage = (function () {
         }
         html += '</ul></div>';
 
-        // We need to replace the button with a wrapper div
-        btnContainer.className = '';
-        btnContainer.style.display = 'inline-block';
         btnContainer.innerHTML = html;
-        btnContainer.onclick = null;
+        btnContainer.style.display = 'inline-block';
         btnContainer.classList.remove('hidden');
 
         // Attach click handlers to dropdown items
