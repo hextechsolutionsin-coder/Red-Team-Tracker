@@ -223,6 +223,80 @@
     logsBody.innerHTML = rows.join('');
   }
 
+  // ── Risk overview renderer ────────────────────────────────────────────────
+
+  /**
+   * Render the risk overview panel with org-level and per-engagement risk scores.
+   *
+   * @param {{ org_risk_score: number|null, org_risk_rating: string|null,
+   *           engagements: Array<{ id: string, name: string, risk_score: number|null,
+   *                                 risk_rating: string|null, finding_count: number,
+   *                                 scored_finding_count: number }> }} risk
+   */
+  function renderRiskOverview(risk) {
+    var orgScoreEl  = document.getElementById('org-risk-score');
+    var orgRatingEl = document.getElementById('org-risk-rating');
+    var table       = document.getElementById('risk-engagements-table');
+    var tbody       = document.getElementById('risk-engagements-tbody');
+    var emptyEl     = document.getElementById('risk-engagements-empty');
+
+    // Org-level risk
+    if (risk.org_risk_score != null) {
+      orgScoreEl.textContent  = risk.org_risk_score;
+      orgRatingEl.textContent = risk.org_risk_rating || '—';
+      orgRatingEl.className   = 'label ' + riskRatingLabelClass(risk.org_risk_rating);
+    } else {
+      orgScoreEl.textContent  = '—';
+      orgRatingEl.textContent = 'No data';
+      orgRatingEl.className   = 'label label-default';
+    }
+
+    // Engagement risk table
+    if (!risk.engagements || risk.engagements.length === 0) {
+      table.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+
+    var hasScored = risk.engagements.some(function (e) { return e.risk_score != null; });
+    if (!hasScored) {
+      table.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+
+    emptyEl.style.display = 'none';
+    table.style.display = '';
+
+    tbody.innerHTML = risk.engagements.map(function (eng) {
+      var scoreDisplay  = eng.risk_score != null ? eng.risk_score : '—';
+      var ratingDisplay = eng.risk_rating || '—';
+      var ratingClass   = riskRatingLabelClass(eng.risk_rating);
+      return '<tr>' +
+        '<td><a href="engagement-detail.html?id=' + encodeURIComponent(eng.id) + '">' + escapeHtml(eng.name) + '</a></td>' +
+        '<td>' + escapeHtml(String(scoreDisplay)) + '</td>' +
+        '<td><span class="label ' + ratingClass + '">' + escapeHtml(ratingDisplay) + '</span></td>' +
+        '<td>' + eng.finding_count + '</td>' +
+        '<td>' + eng.scored_finding_count + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  /**
+   * Return Bootstrap label class for a risk rating.
+   * @param {string|null} rating
+   * @returns {string}
+   */
+  function riskRatingLabelClass(rating) {
+    switch (rating) {
+      case 'Critical': return 'label-danger';
+      case 'High':     return 'label-warning';
+      case 'Medium':   return 'label-info';
+      case 'Low':      return 'label-primary';
+      default:         return 'label-default';
+    }
+  }
+
   // ── Formatting helpers ────────────────────────────────────────────────────
 
   /**
@@ -299,14 +373,16 @@
       '<i class="fa fa-spinner fa-spin"></i> Loading…</td></tr>';
 
     try {
-      // Fire both requests concurrently (Req. 8.4 — on page load)
-      const [stats, logs] = await Promise.all([
+      // Fire all requests concurrently (Req. 8.4 — on page load)
+      const [stats, logs, risk] = await Promise.all([
         apiFetch('/api/v1/dashboard/stats'),
         apiFetch('/api/v1/dashboard/recent-logs'),
+        apiFetch('/api/v1/dashboard/risk'),
       ]);
 
       renderStats(stats);
       renderLogs(logs);
+      renderRiskOverview(risk);
 
     } catch (err) {
       // Display inline error; never navigate away (Req. 8.6)

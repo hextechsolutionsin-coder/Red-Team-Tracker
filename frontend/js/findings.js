@@ -423,6 +423,39 @@
 
   initMitreSearch();
 
+  // ── Risk preview live calculation ─────────────────────────────────────────
+
+  function updateRiskPreview() {
+    var l = document.getElementById('cf-likelihood').value;
+    var i = document.getElementById('cf-impact').value;
+    var a = document.getElementById('cf-asset-criticality').value;
+    var previewDiv = document.getElementById('cf-risk-preview');
+    var scoreEl    = document.getElementById('cf-risk-preview-score');
+    var ratingEl   = document.getElementById('cf-risk-preview-rating');
+
+    if (!l || !i || !a) {
+      previewDiv.style.display = 'none';
+      return;
+    }
+
+    var score = parseInt(l) * parseInt(i) * parseInt(a);
+    var rating, ratingClass;
+    if (score >= 80)      { rating = 'Critical'; ratingClass = 'label-danger'; }
+    else if (score >= 45) { rating = 'High';     ratingClass = 'label-warning'; }
+    else if (score >= 15) { rating = 'Medium';   ratingClass = 'label-info'; }
+    else                  { rating = 'Low';      ratingClass = 'label-primary'; }
+
+    scoreEl.textContent   = score;
+    ratingEl.textContent  = rating;
+    ratingEl.className    = 'label ' + ratingClass;
+    previewDiv.style.display = 'block';
+  }
+
+  ['cf-likelihood', 'cf-impact', 'cf-asset-criticality'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', updateRiskPreview);
+  });
+
   // ── Create Finding form ───────────────────────────────────────────────────
 
   // Load engagement list into the select (for lead/admin creating from findings page)
@@ -468,6 +501,18 @@
     const repro         = document.getElementById('cf-repro').value.trim() || null;
     const remediation   = document.getElementById('cf-remediation').value.trim() || null;
 
+    // Risk scoring fields
+    const likelihoodVal      = document.getElementById('cf-likelihood').value;
+    const impactVal          = document.getElementById('cf-impact').value;
+    const assetCritVal       = document.getElementById('cf-asset-criticality').value;
+    const affectedAssetType  = document.getElementById('cf-affected-asset-type').value || null;
+    const nistCsfFunction    = document.getElementById('cf-nist-csf-function').value || null;
+    const isoControl         = document.getElementById('cf-iso-control').value || null;
+
+    const likelihood      = likelihoodVal ? parseInt(likelihoodVal) : null;
+    const impact          = impactVal ? parseInt(impactVal) : null;
+    const assetCriticality = assetCritVal ? parseInt(assetCritVal) : null;
+
     if (!title || !engagementId || !severity || !status) {
       errorMsg.textContent = 'Title, Engagement, Severity, and Status are required.';
       errorDiv.classList.remove('hidden');
@@ -489,6 +534,12 @@
           mitre_name:          mitreName,
           reproduction_steps:  repro,
           remediation_recs:    remediation,
+          likelihood:          likelihood,
+          impact:              impact,
+          asset_criticality:   assetCriticality,
+          affected_asset_type: affectedAssetType,
+          nist_csf_function:   nistCsfFunction,
+          iso_control:         isoControl,
         }),
       });
 

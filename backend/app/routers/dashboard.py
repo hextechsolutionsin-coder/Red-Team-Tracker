@@ -28,7 +28,14 @@ from app.models.engagement import Engagement
 from app.models.finding import Finding
 from app.models.log import OperatorLog
 from app.models.user import User
-from app.schemas.dashboard import DashboardStatsResponse, RecentLogEntry, SeverityBreakdown
+from app.schemas.dashboard import (
+    DashboardStatsResponse,
+    EngagementRiskEntry,
+    RecentLogEntry,
+    RiskDashboardResponse,
+    SeverityBreakdown,
+)
+from app.services.risk_service import calculate_engagement_risk, calculate_org_risk
 
 logger = logging.getLogger("redboard.dashboard")
 
@@ -171,3 +178,77 @@ async def get_recent_logs(
     )
 
     return entries
+
+
+# ---------------------------------------------------------------------------
+# GET /dashboard/risk — risk overview (ISO 27001 / NIST CSF 2.0)
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/risk",
+    response_model=RiskDashboardResponse,
+    summary="Get organization risk overview",
+    responses={
+        200: {"description": "Risk scores for org and each engagement"},
+        401: {"description": "Not authenticated"},
+    },
+)
+async def get_risk_dashboard(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session_db),
+) -> RiskDashboardResponse:
+    """
+    Return org-level and per-engagement risk scores based on
+    ISO 27001:2022 and NIST CSF 2.0 framework scoring.
+
+    Calculates weighted average risk for each active engagement
+    and an overall organization risk score.
+    """
+    # Fetch all active engagements
+    eng_stmt = select(Engagement).where(
+        Engagement.status.in_(["active", "planned"])
+    )
+    eng_result = await db.execute(eng_stmt)
+    engagements = list(eng_result.scalars().all())
+
+    engagement_entries: list[EngagementRiskEntry] = []
+    engagement_scores: list[float | None] = []
+
+    for eng in engagements:
+        # Fetch all findings for this engagement
+        findings_stmt = select(Finding).where(Finding.engagement_id == eng.id)
+        findings_result = await db.execute(findings_stmt)
+        findings = list(findings_result.scalars().all())
+
+        finding_count = len(findings)
+        scored_finding_count = sum(1 for f in findings if f.risk_score is not None)
+
+        eng_risk_score, eng_risk_rating = calculate_engagement_risk(findings)
+        engagement_scores.append(eng_risk_score)
+
+        engagement_entries.append(
+            EngagementRiskEntry(
+                id=eng.id,
+                name=eng.name,
+                risk_score=eng_risk_score,
+                risk_rating=eng_risk_rating,
+                finding_count=finding_count,
+                scored_finding_count=scored_finding_count,
+            )
+        )
+
+    org_risk_score, org_risk_rating = calculate_org_risk(engagement_scores)
+
+    logger.debug(
+        "Risk dashboard requested by '%s': org_score=%s, %d engagements",
+        current_user.username,
+        org_risk_score,
+        len(engagement_entries),
+    )
+
+    return RiskDashboardResponse(
+        org_risk_score=org_risk_score,
+        org_risk_rating=org_risk_rating,
+        engagements=engagement_entries,
+    )

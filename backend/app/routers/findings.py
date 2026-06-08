@@ -56,6 +56,12 @@ from app.schemas.finding import (
 )
 from app.services.finding_service import SEVERITY_ORDER, validate_mitre_id
 from app.services.log_service import record_log
+from app.services.risk_service import (
+    VALID_AFFECTED_ASSET_TYPES,
+    VALID_ISO_CONTROLS,
+    VALID_NIST_CSF_FUNCTIONS,
+    calculate_risk_score,
+)
 
 logger = logging.getLogger("redboard.findings")
 
@@ -171,6 +177,81 @@ def _validate_status(status: str) -> None:
                 "detail": {
                     "field": "status",
                     "valid_values": sorted(VALID_STATUSES),
+                },
+            },
+        )
+
+
+def _validate_risk_fields(
+    likelihood: int | None,
+    impact: int | None,
+    asset_criticality: int | None,
+    affected_asset_type: str | None,
+    nist_csf_function: str | None,
+    iso_control: str | None,
+) -> None:
+    """Validate risk scoring fields. Raises 400 on invalid values."""
+    for field_name, value in [
+        ("likelihood", likelihood),
+        ("impact", impact),
+        ("asset_criticality", asset_criticality),
+    ]:
+        if value is not None and (value < 1 or value > 5):
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "INVALID_RISK_FIELD",
+                    "message": (
+                        f"Invalid {field_name} '{value}'. Must be an integer between 1 and 5."
+                    ),
+                    "detail": {"field": field_name, "min": 1, "max": 5},
+                },
+            )
+
+    if affected_asset_type is not None and affected_asset_type not in VALID_AFFECTED_ASSET_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "INVALID_RISK_FIELD",
+                "message": (
+                    f"Invalid affected_asset_type '{affected_asset_type}'. "
+                    f"Must be one of: {', '.join(sorted(VALID_AFFECTED_ASSET_TYPES))}."
+                ),
+                "detail": {
+                    "field": "affected_asset_type",
+                    "valid_values": sorted(VALID_AFFECTED_ASSET_TYPES),
+                },
+            },
+        )
+
+    if nist_csf_function is not None and nist_csf_function not in VALID_NIST_CSF_FUNCTIONS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "INVALID_RISK_FIELD",
+                "message": (
+                    f"Invalid nist_csf_function '{nist_csf_function}'. "
+                    f"Must be one of: {', '.join(sorted(VALID_NIST_CSF_FUNCTIONS))}."
+                ),
+                "detail": {
+                    "field": "nist_csf_function",
+                    "valid_values": sorted(VALID_NIST_CSF_FUNCTIONS),
+                },
+            },
+        )
+
+    if iso_control is not None and iso_control not in VALID_ISO_CONTROLS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "INVALID_RISK_FIELD",
+                "message": (
+                    f"Invalid iso_control '{iso_control}'. "
+                    f"Must be one of: {', '.join(sorted(VALID_ISO_CONTROLS))}."
+                ),
+                "detail": {
+                    "field": "iso_control",
+                    "valid_values": sorted(VALID_ISO_CONTROLS),
                 },
             },
         )
@@ -323,6 +404,21 @@ async def create_finding(
     if body.mitre_id is not None:
         validate_mitre_id(body.mitre_id)
 
+    # Validate risk scoring fields
+    _validate_risk_fields(
+        body.likelihood,
+        body.impact,
+        body.asset_criticality,
+        body.affected_asset_type,
+        body.nist_csf_function,
+        body.iso_control,
+    )
+
+    # Compute risk score and rating
+    risk_score, risk_rating = calculate_risk_score(
+        body.likelihood, body.impact, body.asset_criticality
+    )
+
     # Verify engagement exists (Requirement 5.1)
     eng_result = await db.execute(
         select(Engagement).where(Engagement.id == body.engagement_id)
@@ -353,6 +449,14 @@ async def create_finding(
         mitre_name=body.mitre_name,
         reproduction_steps=body.reproduction_steps,
         remediation_recs=body.remediation_recs,
+        likelihood=body.likelihood,
+        impact=body.impact,
+        asset_criticality=body.asset_criticality,
+        risk_score=risk_score,
+        risk_rating=risk_rating,
+        affected_asset_type=body.affected_asset_type,
+        nist_csf_function=body.nist_csf_function,
+        iso_control=body.iso_control,
         created_by=current_user.id,
     )
     db.add(finding)
@@ -474,9 +578,29 @@ async def update_finding(
     if "mitre_id" in update_data and update_data["mitre_id"] is not None:
         validate_mitre_id(update_data["mitre_id"])
 
+    # Validate risk scoring fields if supplied
+    _validate_risk_fields(
+        update_data.get("likelihood"),
+        update_data.get("impact"),
+        update_data.get("asset_criticality"),
+        update_data.get("affected_asset_type"),
+        update_data.get("nist_csf_function"),
+        update_data.get("iso_control"),
+    )
+
     # Apply updates
     for field, value in update_data.items():
         setattr(finding, field, value)
+
+    # Recompute risk score if any risk input field was updated or is present
+    new_likelihood = finding.likelihood
+    new_impact = finding.impact
+    new_asset_criticality = finding.asset_criticality
+    risk_score, risk_rating = calculate_risk_score(
+        new_likelihood, new_impact, new_asset_criticality
+    )
+    finding.risk_score = risk_score
+    finding.risk_rating = risk_rating
 
     # Update the updated_at timestamp
     finding.updated_at = datetime.now(tz=timezone.utc)

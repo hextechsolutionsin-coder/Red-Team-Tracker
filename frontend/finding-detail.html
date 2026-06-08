@@ -105,6 +105,34 @@
               <dd id="finding-created-at">—</dd>
             </dl>
 
+            <!-- Risk Assessment section -->
+            <div id="risk-section" class="hidden">
+              <hr>
+              <h4><i class="fa fa-shield"></i> Risk Assessment</h4>
+              <dl class="dl-horizontal">
+                <dt>Risk Score</dt>
+                <dd><span id="finding-risk-score" class="label label-default">—</span></dd>
+
+                <dt>Likelihood</dt>
+                <dd id="finding-likelihood">—</dd>
+
+                <dt>Impact</dt>
+                <dd id="finding-impact">—</dd>
+
+                <dt>Asset Criticality</dt>
+                <dd id="finding-asset-criticality">—</dd>
+
+                <dt>Affected Asset Type</dt>
+                <dd id="finding-affected-asset-type">—</dd>
+
+                <dt>NIST CSF Function</dt>
+                <dd id="finding-nist-csf-function">—</dd>
+
+                <dt>ISO 27001 Control</dt>
+                <dd id="finding-iso-control">—</dd>
+              </dl>
+            </div>
+
             <hr>
 
             <h4>Reproduction Steps</h4>
@@ -303,6 +331,42 @@
           document.getElementById('finding-created-at').textContent = f.created_at ? new Date(f.created_at).toLocaleString() : '—';
           document.getElementById('finding-reproduction').textContent = f.reproduction_steps || '—';
           document.getElementById('finding-remediation').textContent  = f.remediation_recs   || '—';
+
+          // Risk assessment fields
+          var riskSection = document.getElementById('risk-section');
+          if (f.risk_score != null || f.likelihood != null || f.nist_csf_function || f.iso_control || f.affected_asset_type) {
+            riskSection.classList.remove('hidden');
+
+            var riskScoreEl = document.getElementById('finding-risk-score');
+            if (f.risk_score != null) {
+              riskScoreEl.textContent = f.risk_score + ' — ' + (f.risk_rating || '');
+              var ratingClass = 'label-default';
+              if (f.risk_rating === 'Critical') ratingClass = 'label-danger';
+              else if (f.risk_rating === 'High') ratingClass = 'label-warning';
+              else if (f.risk_rating === 'Medium') ratingClass = 'label-info';
+              else if (f.risk_rating === 'Low') ratingClass = 'label-primary';
+              riskScoreEl.className = 'label ' + ratingClass;
+            } else {
+              riskScoreEl.textContent = 'Not scored';
+              riskScoreEl.className = 'label label-default';
+            }
+
+            var likelihoodLabels = { 1: 'Rare', 2: 'Unlikely', 3: 'Possible', 4: 'Likely', 5: 'Almost Certain' };
+            var impactLabels     = { 1: 'Negligible', 2: 'Minor', 3: 'Moderate', 4: 'Major', 5: 'Catastrophic' };
+            var critLabels       = { 1: 'Very Low', 2: 'Low', 3: 'Medium', 4: 'High', 5: 'Critical' };
+
+            document.getElementById('finding-likelihood').textContent =
+              f.likelihood != null ? f.likelihood + ' — ' + (likelihoodLabels[f.likelihood] || '') : '—';
+            document.getElementById('finding-impact').textContent =
+              f.impact != null ? f.impact + ' — ' + (impactLabels[f.impact] || '') : '—';
+            document.getElementById('finding-asset-criticality').textContent =
+              f.asset_criticality != null ? f.asset_criticality + ' — ' + (critLabels[f.asset_criticality] || '') : '—';
+            document.getElementById('finding-affected-asset-type').textContent = f.affected_asset_type || '—';
+            document.getElementById('finding-nist-csf-function').textContent   = f.nist_csf_function || '—';
+            document.getElementById('finding-iso-control').textContent         = f.iso_control || '—';
+          } else {
+            riskSection.classList.add('hidden');
+          }
 
           // Link to parent engagement
           if (f.engagement_id) {

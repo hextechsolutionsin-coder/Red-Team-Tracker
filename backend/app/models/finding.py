@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import CheckConstraint, ForeignKey, String, Text, text
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -69,6 +69,41 @@ class Finding(Base):
         Text,
         nullable=True,
     )
+
+    # ── Risk scoring fields (ISO 27001:2022 / NIST CSF 2.0) ─────────────────
+    likelihood: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    impact: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    asset_criticality: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    risk_score: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    risk_rating: Mapped[str | None] = mapped_column(
+        String(16),
+        nullable=True,
+    )
+    affected_asset_type: Mapped[str | None] = mapped_column(
+        String(32),
+        nullable=True,
+    )
+    nist_csf_function: Mapped[str | None] = mapped_column(
+        String(16),
+        nullable=True,
+    )
+    iso_control: Mapped[str | None] = mapped_column(
+        String(16),
+        nullable=True,
+    )
+
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id"),

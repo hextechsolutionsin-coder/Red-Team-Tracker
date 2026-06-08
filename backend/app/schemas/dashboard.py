@@ -6,6 +6,7 @@ Requirements: 8.1, 8.2
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -51,3 +52,31 @@ class RecentLogEntry(BaseModel):
     occurred_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ---------------------------------------------------------------------------
+# Risk dashboard schemas
+# ---------------------------------------------------------------------------
+
+
+class EngagementRiskEntry(BaseModel):
+    """Risk summary for a single engagement."""
+
+    id: uuid.UUID
+    name: str
+    risk_score: float | None
+    risk_rating: str | None
+    finding_count: int
+    scored_finding_count: int
+
+
+class RiskDashboardResponse(BaseModel):
+    """
+    Response for GET /api/v1/dashboard/risk.
+
+    Returns org-level risk score and per-engagement risk breakdown.
+    """
+
+    org_risk_score: float | None
+    org_risk_rating: str | None
+    engagements: list[EngagementRiskEntry]

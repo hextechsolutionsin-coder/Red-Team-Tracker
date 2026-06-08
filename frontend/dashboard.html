@@ -149,6 +149,43 @@
 
     </div><!-- /stats-row -->
 
+    <!-- ── Risk Overview Panel ──────────────────────────────────────── -->
+    <div class="row" id="risk-overview-row">
+      <div class="col-sm-12">
+        <div class="panel panel-danger">
+          <div class="panel-heading">
+            <i class="fa fa-shield fa-fw"></i> Risk Overview
+            <small>(ISO 27001:2022 / NIST CSF 2.0)</small>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-sm-3 text-center">
+                <h5>Organization Risk Score</h5>
+                <p class="stat-value" id="org-risk-score" style="font-size: 32px;">—</p>
+                <span id="org-risk-rating" class="label label-default" style="font-size: 14px;">—</span>
+              </div>
+              <div class="col-sm-9">
+                <h5>Engagement Risk Scores</h5>
+                <table class="table table-condensed table-hover" id="risk-engagements-table" style="display:none;">
+                  <thead>
+                    <tr>
+                      <th>Engagement</th>
+                      <th>Risk Score</th>
+                      <th>Rating</th>
+                      <th>Findings</th>
+                      <th>Scored</th>
+                    </tr>
+                  </thead>
+                  <tbody id="risk-engagements-tbody"></tbody>
+                </table>
+                <p id="risk-engagements-empty" class="text-muted" style="display:none;">No scored engagements.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /risk-overview-row -->
+
     <!-- ── Chart + Recent Logs ──────────────────────────────────────── -->
     <div class="row">
 
