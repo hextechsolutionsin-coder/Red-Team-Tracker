@@ -68,6 +68,8 @@ class EngagementRiskEntry(BaseModel):
     risk_rating: str | None
     finding_count: int
     scored_finding_count: int
+    active_finding_count: int
+    resolved_finding_count: int
 
 
 class RiskDashboardResponse(BaseModel):

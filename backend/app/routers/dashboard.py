@@ -35,7 +35,11 @@ from app.schemas.dashboard import (
     RiskDashboardResponse,
     SeverityBreakdown,
 )
-from app.services.risk_service import calculate_engagement_risk, calculate_org_risk
+from app.services.risk_service import (
+    ACTIVE_RISK_STATUSES,
+    calculate_engagement_risk,
+    calculate_org_risk,
+)
 
 logger = logging.getLogger("redboard.dashboard")
 
@@ -223,6 +227,10 @@ async def get_risk_dashboard(
 
         finding_count = len(findings)
         scored_finding_count = sum(1 for f in findings if f.risk_score is not None)
+        active_finding_count = sum(
+            1 for f in findings if f.status in ACTIVE_RISK_STATUSES
+        )
+        resolved_finding_count = finding_count - active_finding_count
 
         eng_risk_score, eng_risk_rating = calculate_engagement_risk(findings)
         engagement_scores.append(eng_risk_score)
@@ -235,6 +243,8 @@ async def get_risk_dashboard(
                 risk_rating=eng_risk_rating,
                 finding_count=finding_count,
                 scored_finding_count=scored_finding_count,
+                active_finding_count=active_finding_count,
+                resolved_finding_count=resolved_finding_count,
             )
         )
 

@@ -555,7 +555,7 @@ async def update_finding(
     """
     finding = await _get_finding_or_404(finding_id, db)
 
-    update_data = body.model_dump(exclude_none=True)
+    update_data = body.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(
             status_code=400,

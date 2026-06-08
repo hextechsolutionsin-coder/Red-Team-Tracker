@@ -316,7 +316,7 @@ async def update_engagement(
     engagement = await _get_engagement_or_404(engagement_id, db)
 
     # Check at least one field is provided
-    update_data = body.model_dump(exclude_none=True)
+    update_data = body.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(
             status_code=400,

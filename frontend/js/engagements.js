@@ -545,9 +545,10 @@ var EngagementDetailPage = (function () {
         var target = transitions[0];
         var capitalised = target.charAt(0).toUpperCase() + target.slice(1);
         btnContainer.className = 'btn btn-warning';
+        btnContainer.style.display = 'inline-block';
         btnContainer.innerHTML = '<i class="fa fa-arrow-right"></i> <span id="btn-advance-label">Advance to ' + capitalised + '</span>';
         btnContainer.onclick = function () { submitAdvanceStatus(target); };
-        setVisible('btn-advance-status', true);
+        btnContainer.classList.remove('hidden');
       } else {
         // Multiple transitions — render as a dropdown button group
         var html = '<div class="btn-group">' +
@@ -567,7 +568,7 @@ var EngagementDetailPage = (function () {
         btnContainer.style.display = 'inline-block';
         btnContainer.innerHTML = html;
         btnContainer.onclick = null;
-        setVisible('btn-advance-status', true);
+        btnContainer.classList.remove('hidden');
 
         // Attach click handlers to dropdown items
         var options = btnContainer.querySelectorAll('.advance-option');
@@ -581,7 +582,7 @@ var EngagementDetailPage = (function () {
         }
       }
     } else {
-      setVisible('btn-advance-status', false);
+      btnContainer.classList.add('hidden');
     }
   }
 

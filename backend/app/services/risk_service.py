@@ -29,6 +29,10 @@ VALID_ISO_CONTROLS = {"A.5", "A.6", "A.7", "A.8"}
 # Severity weights for engagement-level risk aggregation
 SEVERITY_WEIGHT = {"Critical": 5, "High": 4, "Medium": 3, "Low": 2, "Info": 1}
 
+# Statuses that represent unresolved/active risk — resolved findings should
+# NOT count toward engagement risk scores.
+ACTIVE_RISK_STATUSES = {"open", "in-progress", "reopened", "on-hold"}
+
 
 # ---------------------------------------------------------------------------
 # Individual finding risk score
@@ -76,7 +80,10 @@ def calculate_engagement_risk(
     Weight by severity: Critical=5, High=4, Medium=3, Low=2, Info=1.
     Returns (average_score, rating) or (None, None) if no scored findings.
     """
-    scored_findings = [f for f in findings if f.risk_score is not None]
+    scored_findings = [
+        f for f in findings
+        if f.risk_score is not None and f.status in ACTIVE_RISK_STATUSES
+    ]
     if not scored_findings:
         return None, None
 
