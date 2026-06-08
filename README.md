@@ -130,17 +130,17 @@ or replace `localhost` with your server's IP address or hostname.
 
 The application has no default users. Create the first admin directly in the database:
 
-```powershell
+```bash
 docker compose exec backend python -c "
 import asyncio, uuid
 from datetime import datetime, timezone
-from app.database import AsyncSessionLocal
+from app.database import async_session_factory
 from app.models.user import User
 import bcrypt
 
 async def create_admin():
     pw = bcrypt.hashpw(b'YourPassword123!', bcrypt.gensalt(rounds=12)).decode()
-    async with AsyncSessionLocal() as db:
+    async with async_session_factory() as db:
         user = User(
             id=uuid.uuid4(),
             username='admin',
@@ -159,6 +159,19 @@ asyncio.run(create_admin())
 ```
 
 Change `YourPassword123!` to a strong password before running.
+
+---
+
+### Resetting the database
+
+To completely wipe all data and start fresh:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+The `-v` flag removes all volumes including the PostgreSQL data. You'll need to create a new admin user afterwards.
 
 ---
 
