@@ -26,7 +26,7 @@ class Engagement(Base):
             name="ck_engagements_dates",
         ),
         CheckConstraint(
-            "status IN ('planned', 'active', 'completed', 'archived')",
+            "status IN ('planned', 'active', 'on-hold', 'remediation', 'completed', 'reopened', 'archived')",
             name="ck_engagements_status",
         ),
     )

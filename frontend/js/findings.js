@@ -104,10 +104,13 @@
 
   function statusLabel(status) {
     const labels = {
-      'open':        'default',
-      'in-progress': 'warning',
-      'remediated':  'success',
-      'verified':    'primary',
+      'open':           'default',
+      'in-progress':    'warning',
+      'remediated':     'success',
+      'verified':       'primary',
+      'reopened':       'danger',
+      'on-hold':        'info',
+      'false-positive': 'default',
     };
     const bs = labels[status] || 'default';
     return `<span class="label label-${bs}">${escapeHtml(status)}</span>`;

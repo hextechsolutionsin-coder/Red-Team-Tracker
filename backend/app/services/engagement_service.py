@@ -1,9 +1,14 @@
 """
 Engagement service — status machine and field-edit guard helpers.
 
-The engagement lifecycle follows a strict forward-only order:
+The engagement lifecycle supports the following transitions:
 
-    planned → active → completed → archived
+    planned → active → on-hold → remediation → completed → archived
+
+With additional flexibility:
+    on-hold → active (resume)
+    remediation → active (reopen)
+    completed → reopened → active
 
 Requirements: 4.3, 4.9
 """
@@ -12,22 +17,23 @@ from __future__ import annotations
 
 from fastapi import HTTPException
 
-# Canonical order of engagement statuses.  Position in the list determines
-# what is a valid "next" state: a transition is valid only if the requested
-# status is exactly one position ahead of the current status.
-STATUS_ORDER: list[str] = ["planned", "active", "completed", "archived"]
+# Canonical order of engagement statuses (for reference/display).
+STATUS_ORDER: list[str] = ["planned", "active", "on-hold", "remediation", "completed", "reopened", "archived"]
+
+# Valid transitions: maps current status to a list of allowed next statuses.
+VALID_TRANSITIONS: dict[str, list[str]] = {
+    "planned":     ["active"],
+    "active":      ["on-hold", "remediation", "completed"],
+    "on-hold":     ["active"],
+    "remediation": ["active", "completed"],
+    "completed":   ["archived", "reopened"],
+    "reopened":    ["active"],
+    "archived":    [],  # final state
+}
 
 
 def validate_transition(current: str, requested: str) -> None:
-    """Raise HTTPException(400) unless *requested* is exactly one step forward.
-
-    Valid transitions:
-        planned   → active
-        active    → completed
-        completed → archived
-
-    Any attempt to skip a step, stay on the same status, or move backwards
-    is rejected.
+    """Raise HTTPException(400) unless *requested* is a valid transition from *current*.
 
     Parameters
     ----------
@@ -39,11 +45,9 @@ def validate_transition(current: str, requested: str) -> None:
     Raises
     ------
     HTTPException(400)
-        When the transition is not exactly one forward step.
+        When the transition is not valid.
     """
-    try:
-        current_index = STATUS_ORDER.index(current)
-    except ValueError:
+    if current not in VALID_TRANSITIONS:
         raise HTTPException(
             status_code=400,
             detail={
@@ -52,9 +56,7 @@ def validate_transition(current: str, requested: str) -> None:
             },
         )
 
-    try:
-        requested_index = STATUS_ORDER.index(requested)
-    except ValueError:
+    if requested not in STATUS_ORDER:
         raise HTTPException(
             status_code=400,
             detail={
@@ -63,16 +65,15 @@ def validate_transition(current: str, requested: str) -> None:
             },
         )
 
-    if requested_index != current_index + 1:
+    allowed = VALID_TRANSITIONS.get(current, [])
+    if requested not in allowed:
         raise HTTPException(
             status_code=400,
             detail={
                 "error_code": "INVALID_STATUS_TRANSITION",
                 "message": (
-                    f"Invalid status transition: '{current}' → '{requested}'. "
-                    f"Expected next status: '{STATUS_ORDER[current_index + 1]}'"
-                    if current_index + 1 < len(STATUS_ORDER)
-                    else f"Invalid status transition: '{current}' is already the final status."
+                    f"Invalid transition: '{current}' → '{requested}'. "
+                    f"Allowed: {', '.join(allowed) or 'none (final state)'}."
                 ),
             },
         )

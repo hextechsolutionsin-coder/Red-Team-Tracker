@@ -17,22 +17,45 @@
  * ───────────────────────────────────────────────────────────────────────────── */
 
 /**
- * Status order for the forward-only state machine (Requirement 4.3).
- * planned → active → completed → archived
+ * Status order for the engagement lifecycle (Requirement 4.3).
+ * planned → active → on-hold → remediation → completed → reopened → archived
  */
-var STATUS_ORDER = ['planned', 'active', 'completed', 'archived'];
+var STATUS_ORDER = ['planned', 'active', 'on-hold', 'remediation', 'completed', 'reopened', 'archived'];
+
+/**
+ * Valid transitions map: current status → array of allowed next statuses.
+ */
+var VALID_TRANSITIONS = {
+  'planned':     ['active'],
+  'active':      ['on-hold', 'remediation', 'completed'],
+  'on-hold':     ['active'],
+  'remediation': ['active', 'completed'],
+  'completed':   ['archived', 'reopened'],
+  'reopened':    ['active'],
+  'archived':    [],
+};
+
+/**
+ * Return the list of valid next statuses for a given current status,
+ * or an empty array if at a final state.
+ *
+ * @param {string} current
+ * @returns {string[]}
+ */
+function getValidTransitions(current) {
+  return VALID_TRANSITIONS[current] || [];
+}
 
 /**
  * Return the next valid status for a given current status, or null if already
- * at the final state (archived).
+ * at the final state (archived). Returns the first valid transition.
  *
  * @param {string} current
  * @returns {string|null}
  */
 function nextStatus(current) {
-  var idx = STATUS_ORDER.indexOf(current);
-  if (idx === -1 || idx === STATUS_ORDER.length - 1) return null;
-  return STATUS_ORDER[idx + 1];
+  var transitions = getValidTransitions(current);
+  return transitions.length > 0 ? transitions[0] : null;
 }
 
 /**
@@ -43,10 +66,13 @@ function nextStatus(current) {
  */
 function statusLabel(status) {
   var cls = {
-    planned:   'label-planned',
-    active:    'label-active',
-    completed: 'label-completed',
-    archived:  'label-archived',
+    planned:     'label-planned',
+    active:      'label-active',
+    'on-hold':   'label-warning',
+    remediation: 'label-info',
+    completed:   'label-completed',
+    reopened:    'label-danger',
+    archived:    'label-archived',
   }[status] || 'label-default';
   return '<span class="label ' + cls + '">' + escapeHtml(status) + '</span>';
 }
@@ -413,7 +439,7 @@ var EngagementDetailPage = (function () {
     }
 
     // Wire advance-status button (Requirement 4.3)
-    document.getElementById('btn-advance-status').addEventListener('click', submitAdvanceStatus);
+    // Click handling is now done dynamically in renderAdvanceButton()
 
     // Wire generate-report button (Requirement 9.x — reports.js provides downloadReport)
     document.getElementById('btn-report').addEventListener('click', function () {
@@ -500,67 +526,102 @@ var EngagementDetailPage = (function () {
   }
 
   /**
-   * Show or hide the advance-status button depending on the current status
+   * Show or hide the advance-status dropdown depending on the current status
    * and the user's role.  Only lead/admin may advance status (Req 4.3).
+   *
+   * Renders a Bootstrap dropdown button showing all valid transitions.
    *
    * @param {object} eng
    */
   function renderAdvanceButton(eng) {
-    var next      = nextStatus(eng.status);
-    var canAdvance = next !== null && (_user.role === 'lead' || _user.role === 'admin');
+    var transitions = getValidTransitions(eng.status);
+    var canAdvance  = transitions.length > 0 && (_user.role === 'lead' || _user.role === 'admin');
+
+    var btnContainer = document.getElementById('btn-advance-status');
 
     if (canAdvance) {
-      var label = document.getElementById('btn-advance-label');
-      if (label) {
-        label.textContent = 'Advance to ' + next.charAt(0).toUpperCase() + next.slice(1);
+      if (transitions.length === 1) {
+        // Single transition — render as a simple button
+        var target = transitions[0];
+        var capitalised = target.charAt(0).toUpperCase() + target.slice(1);
+        btnContainer.className = 'btn btn-warning';
+        btnContainer.innerHTML = '<i class="fa fa-arrow-right"></i> <span id="btn-advance-label">Advance to ' + capitalised + '</span>';
+        btnContainer.onclick = function () { submitAdvanceStatus(target); };
+        setVisible('btn-advance-status', true);
+      } else {
+        // Multiple transitions — render as a dropdown button group
+        var html = '<div class="btn-group">' +
+          '<button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+          '<i class="fa fa-arrow-right"></i> Transition Status <span class="caret"></span>' +
+          '</button>' +
+          '<ul class="dropdown-menu">';
+        for (var i = 0; i < transitions.length; i++) {
+          var t = transitions[i];
+          var cap = t.charAt(0).toUpperCase() + t.slice(1);
+          html += '<li><a href="#" class="advance-option" data-status="' + escapeHtml(t) + '">' + escapeHtml(cap) + '</a></li>';
+        }
+        html += '</ul></div>';
+
+        // We need to replace the button with a wrapper div
+        btnContainer.className = '';
+        btnContainer.style.display = 'inline-block';
+        btnContainer.innerHTML = html;
+        btnContainer.onclick = null;
+        setVisible('btn-advance-status', true);
+
+        // Attach click handlers to dropdown items
+        var options = btnContainer.querySelectorAll('.advance-option');
+        for (var j = 0; j < options.length; j++) {
+          (function (option) {
+            option.addEventListener('click', function (e) {
+              e.preventDefault();
+              submitAdvanceStatus(option.getAttribute('data-status'));
+            });
+          })(options[j]);
+        }
       }
-      setVisible('btn-advance-status', true);
     } else {
       setVisible('btn-advance-status', false);
     }
   }
 
   /**
-   * Submit a status advance PATCH request.
-   * Only moves to the immediate next status (forward-only, Requirement 4.3).
+   * Submit a status transition PATCH request.
+   *
+   * @param {string} targetStatus - The status to transition to.
    */
-  function submitAdvanceStatus() {
+  function submitAdvanceStatus(targetStatus) {
     if (!_engagement) return;
-
-    var next = nextStatus(_engagement.status);
-    if (!next) return;
+    if (!targetStatus) return;
 
     hideError('status-error');
     setVisible('status-success', false);
 
-    var btn = document.getElementById('btn-advance-status');
+    var btnContainer = document.getElementById('btn-advance-status');
+    var btn = btnContainer.querySelector('.btn') || btnContainer;
     btn.disabled = true;
+    var origHtml = btn.innerHTML;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Updating…';
 
     apiFetch('/api/v1/engagements/' + encodeURIComponent(_engagementId), {
       method: 'PATCH',
-      body:   JSON.stringify({ status: next }),
+      body:   JSON.stringify({ status: targetStatus }),
     })
       .then(function (eng) {
         _engagement = eng;
         renderDetail(eng);
 
-        var capitalised = next.charAt(0).toUpperCase() + next.slice(1);
+        var capitalised = targetStatus.charAt(0).toUpperCase() + targetStatus.slice(1);
         showSuccess(
           'status-success-msg',
           'status-success',
-          'Status advanced to "' + capitalised + '".'
+          'Status changed to "' + capitalised + '".'
         );
-
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-arrow-right"></i> <span id="btn-advance-label">Advance Status</span>';
-        renderAdvanceButton(eng);
       })
       .catch(function (err) {
-        showError('status-error-msg', 'status-error', err.message || 'Failed to advance status.');
+        showError('status-error-msg', 'status-error', err.message || 'Failed to change status.');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-arrow-right"></i> <span id="btn-advance-label">Advance Status</span>';
-        renderAdvanceButton(_engagement);
+        btn.innerHTML = origHtml;
       });
   }
 

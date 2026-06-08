@@ -66,7 +66,7 @@ _DEFAULT_PAGE_SIZE = 20
 _MAX_PAGE_SIZE = 100
 
 # Valid engagement statuses
-_VALID_STATUSES = {"planned", "active", "completed", "archived"}
+_VALID_STATUSES = {"planned", "active", "on-hold", "remediation", "completed", "reopened", "archived"}
 
 
 # ---------------------------------------------------------------------------

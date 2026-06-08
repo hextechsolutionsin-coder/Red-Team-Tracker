@@ -180,10 +180,13 @@
                   <div class="form-group">
                     <label for="edit-status">Status</label>
                     <select id="edit-status" class="form-control">
-                      <option value="open">open</option>
-                      <option value="in-progress">in-progress</option>
-                      <option value="remediated">remediated</option>
-                      <option value="verified">verified</option>
+                      <option value="open">Open</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="remediated">Remediated</option>
+                      <option value="verified">Verified</option>
+                      <option value="reopened">Reopened</option>
+                      <option value="on-hold">On Hold</option>
+                      <option value="false-positive">False Positive</option>
                     </select>
                   </div>
                 </div>
@@ -199,6 +202,95 @@
                   <div class="form-group">
                     <label for="edit-mitre-name">MITRE Name (optional)</label>
                     <input type="text" id="edit-mitre-name" class="form-control" maxlength="256">
+                  </div>
+                </div>
+              </div>
+              <hr>
+              <h5><i class="fa fa-shield"></i> Risk Assessment</h5>
+              <div class="row">
+                <div class="col-sm-4">
+                  <div class="form-group">
+                    <label for="edit-likelihood">Likelihood</label>
+                    <select id="edit-likelihood" class="form-control">
+                      <option value="">— none —</option>
+                      <option value="1">1 — Rare</option>
+                      <option value="2">2 — Unlikely</option>
+                      <option value="3">3 — Possible</option>
+                      <option value="4">4 — Likely</option>
+                      <option value="5">5 — Almost Certain</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="form-group">
+                    <label for="edit-impact">Impact</label>
+                    <select id="edit-impact" class="form-control">
+                      <option value="">— none —</option>
+                      <option value="1">1 — Negligible</option>
+                      <option value="2">2 — Minor</option>
+                      <option value="3">3 — Moderate</option>
+                      <option value="4">4 — Major</option>
+                      <option value="5">5 — Catastrophic</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="form-group">
+                    <label for="edit-asset-criticality">Asset Criticality</label>
+                    <select id="edit-asset-criticality" class="form-control">
+                      <option value="">— none —</option>
+                      <option value="1">1 — Very Low</option>
+                      <option value="2">2 — Low</option>
+                      <option value="3">3 — Medium</option>
+                      <option value="4">4 — High</option>
+                      <option value="5">5 — Critical</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-4">
+                  <div class="form-group">
+                    <label for="edit-affected-asset-type">Asset Type</label>
+                    <select id="edit-affected-asset-type" class="form-control">
+                      <option value="">— none —</option>
+                      <option value="Network">Network Infrastructure</option>
+                      <option value="Application">Web/Mobile Application</option>
+                      <option value="Data">Data/Database</option>
+                      <option value="Personnel">Personnel/Social Engineering</option>
+                      <option value="Physical">Physical Security</option>
+                      <option value="Cloud">Cloud Infrastructure</option>
+                      <option value="Endpoint">Endpoint/Workstation</option>
+                      <option value="IoT">IoT/OT Device</option>
+                      <option value="Identity">Identity/Access Management</option>
+                      <option value="Supply Chain">Supply Chain/Third-Party</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="form-group">
+                    <label for="edit-nist-csf">NIST CSF Function</label>
+                    <select id="edit-nist-csf" class="form-control">
+                      <option value="">— none —</option>
+                      <option value="Govern">GV — Govern</option>
+                      <option value="Identify">ID — Identify</option>
+                      <option value="Protect">PR — Protect</option>
+                      <option value="Detect">DE — Detect</option>
+                      <option value="Respond">RS — Respond</option>
+                      <option value="Recover">RC — Recover</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="form-group">
+                    <label for="edit-iso-control">ISO 27001 Control</label>
+                    <select id="edit-iso-control" class="form-control">
+                      <option value="">— none —</option>
+                      <option value="A.5">A.5 — Organizational</option>
+                      <option value="A.6">A.6 — People</option>
+                      <option value="A.7">A.7 — Physical</option>
+                      <option value="A.8">A.8 — Technological</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -398,6 +490,14 @@
           document.getElementById('edit-reproduction').value = f.reproduction_steps || '';
           document.getElementById('edit-remediation').value  = f.remediation_recs   || '';
 
+          // Pre-populate risk assessment edit fields
+          document.getElementById('edit-likelihood').value = f.likelihood || '';
+          document.getElementById('edit-impact').value = f.impact || '';
+          document.getElementById('edit-asset-criticality').value = f.asset_criticality || '';
+          document.getElementById('edit-affected-asset-type').value = f.affected_asset_type || '';
+          document.getElementById('edit-nist-csf').value = f.nist_csf_function || '';
+          document.getElementById('edit-iso-control').value = f.iso_control || '';
+
         } catch (err) {
           showPageError(err.message || 'Failed to load finding.');
         }
@@ -426,6 +526,12 @@
           mitre_name:          document.getElementById('edit-mitre-name').value.trim() || null,
           reproduction_steps:  document.getElementById('edit-reproduction').value.trim() || null,
           remediation_recs:    document.getElementById('edit-remediation').value.trim() || null,
+          likelihood:          document.getElementById('edit-likelihood').value ? parseInt(document.getElementById('edit-likelihood').value) : null,
+          impact:              document.getElementById('edit-impact').value ? parseInt(document.getElementById('edit-impact').value) : null,
+          asset_criticality:   document.getElementById('edit-asset-criticality').value ? parseInt(document.getElementById('edit-asset-criticality').value) : null,
+          affected_asset_type: document.getElementById('edit-affected-asset-type').value || null,
+          nist_csf_function:   document.getElementById('edit-nist-csf').value || null,
+          iso_control:         document.getElementById('edit-iso-control').value || null,
         };
 
         const btn = this.querySelector('button[type="submit"]');

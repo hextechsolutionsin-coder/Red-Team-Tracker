@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 
 VALID_SEVERITIES = {"Critical", "High", "Medium", "Low", "Info"}
-VALID_STATUSES = {"open", "in-progress", "remediated", "verified"}
+VALID_STATUSES = {"open", "in-progress", "remediated", "verified", "reopened", "on-hold", "false-positive"}
 
 
 # ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ class FindingCreate(BaseModel):
     )
     status: str = Field(
         ...,
-        description="Finding status: open, in-progress, remediated, or verified",
+        description="Finding status: open, in-progress, remediated, verified, reopened, on-hold, or false-positive",
     )
     mitre_id: str | None = Field(
         default=None,
@@ -128,7 +128,7 @@ class FindingUpdate(BaseModel):
     )
     status: str | None = Field(
         default=None,
-        description="Updated status: open, in-progress, remediated, or verified",
+        description="Updated status: open, in-progress, remediated, verified, reopened, on-hold, or false-positive",
     )
     mitre_id: str | None = Field(
         default=None,

@@ -18,7 +18,7 @@ class Finding(Base):
             name="ck_findings_severity",
         ),
         CheckConstraint(
-            "status IN ('open', 'in-progress', 'remediated', 'verified')",
+            "status IN ('open', 'in-progress', 'remediated', 'verified', 'reopened', 'on-hold', 'false-positive')",
             name="ck_findings_status",
         ),
         CheckConstraint(
@@ -50,7 +50,7 @@ class Finding(Base):
         nullable=False,
     )
     status: Mapped[str] = mapped_column(
-        String(16),
+        String(20),
         nullable=False,
     )
     mitre_id: Mapped[str | None] = mapped_column(
