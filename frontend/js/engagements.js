@@ -540,48 +540,32 @@ var EngagementDetailPage = (function () {
     var btnContainer = document.getElementById('btn-advance-status');
 
     if (canAdvance) {
-      if (transitions.length === 1) {
-        // Single transition — render a button inside the container
-        var target = transitions[0];
-        var capitalised = target.charAt(0).toUpperCase() + target.slice(1);
-        btnContainer.innerHTML = '<button type="button" class="btn btn-warning" id="btn-advance-single">' +
-          '<i class="fa fa-arrow-right"></i> Advance to ' + capitalised +
-          '</button>';
-        btnContainer.style.display = 'inline-block';
-        btnContainer.classList.remove('hidden');
-        document.getElementById('btn-advance-single').addEventListener('click', function () {
-          submitAdvanceStatus(target);
-        });
-      } else {
-        // Multiple transitions — render as a dropdown button group
-        var html = '<div class="btn-group">' +
-          '<button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
-          '<i class="fa fa-arrow-right"></i> Transition Status <span class="caret"></span>' +
-          '</button>' +
-          '<ul class="dropdown-menu">';
-        for (var i = 0; i < transitions.length; i++) {
-          var t = transitions[i];
-          var cap = t.charAt(0).toUpperCase() + t.slice(1);
-          html += '<li><a href="#" class="advance-option" data-status="' + escapeHtml(t) + '">' + escapeHtml(cap) + '</a></li>';
-        }
-        html += '</ul></div>';
-
-        btnContainer.innerHTML = html;
-        btnContainer.style.display = 'inline-block';
-        btnContainer.classList.remove('hidden');
-
-        // Attach click handlers to dropdown items
-        var options = btnContainer.querySelectorAll('.advance-option');
-        for (var j = 0; j < options.length; j++) {
-          (function (option) {
-            option.addEventListener('click', function (e) {
-              e.preventDefault();
-              submitAdvanceStatus(option.getAttribute('data-status'));
-            });
-          })(options[j]);
-        }
+      // Always render as a select dropdown + Go button
+      var html = '<div class="input-group" style="width:280px;display:inline-table;">' +
+        '<select id="status-transition-select" class="form-control">';
+      for (var i = 0; i < transitions.length; i++) {
+        var t = transitions[i];
+        var cap = t.charAt(0).toUpperCase() + t.slice(1);
+        html += '<option value="' + escapeHtml(t) + '">' + escapeHtml(cap) + '</option>';
       }
+      html += '</select>' +
+        '<span class="input-group-btn">' +
+        '<button type="button" class="btn btn-warning" id="btn-transition-go">' +
+        '<i class="fa fa-arrow-right"></i> Go</button>' +
+        '</span></div>';
+
+      btnContainer.innerHTML = html;
+      btnContainer.style.display = 'inline-block';
+      btnContainer.classList.remove('hidden');
+
+      document.getElementById('btn-transition-go').addEventListener('click', function () {
+        var sel = document.getElementById('status-transition-select');
+        if (sel && sel.value) {
+          submitAdvanceStatus(sel.value);
+        }
+      });
     } else {
+      btnContainer.innerHTML = '';
       btnContainer.classList.add('hidden');
     }
   }
